@@ -47,11 +47,15 @@ macro LoadGraphicsDataIntoVRAM
         jr nz, .load_tile\@
 endm
 
-; LoadLetter 0 CHAR_A
-; LoadLetter 1 CHAR_Z
+; LoadLetter 0 CHAR_A_ADDR
+; LoadLetter 1 CHAR_Z_ADDR
 macro LoadLetter
     ld c, 255
-    ld de, TILE_ALPHABET_START + (\2 * 256)
+    copy e, [\2]
+    copy d, [\2 + 1]
+    ld hl, TILE_ALPHABET_START
+    add hl, de
+    ld_r16_r16 de, hl
     ld hl, _VRAM8800 + (\1 * 256)
 .load_letter_copy\@
     copy [hli], [de]
@@ -110,8 +114,8 @@ InitSample:
     ; Init Graphics
     InitOAM
     LoadGraphicsDataIntoVRAM
-    LoadLetter 0, CHAR_A
-    LoadLetter 1, CHAR_Z
+    LoadLetter 0, CHAR_A_ADDR
+    LoadLetter 1, CHAR_Z_ADDR
 
     ; Draw the first Game Tile
     ld b, 4
@@ -209,8 +213,8 @@ UpdateSample:
     jr nz, .display_new_letters_done
         xor a
         ld [rLCDC], a
-        LoadLetter 0, CHAR_B
-        LoadLetter 1, CHAR_P
+        LoadLetter 0, CHAR_B_ADDR
+        LoadLetter 1, CHAR_P_ADDR
         ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
         ld [rLCDC], a
     .display_new_letters_done
