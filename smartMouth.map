@@ -1,5 +1,5 @@
 SUMMARY:
-	ROM0: 7430 bytes used / 25338 free
+	ROM0: 7481 bytes used / 25287 free
 
 ROM0 bank #0:
 	SECTION: $0000-$0033 ($0034 bytes) ["game_tile_addresses"]
@@ -12,22 +12,25 @@ ROM0 bank #0:
 	EMPTY: $005b-$00ff ($00a5 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
-	SECTION: $0150-$02df ($0190 bytes) ["sample"]
+	SECTION: $0150-$0312 ($01c3 bytes) ["sample"]
 	         $0150 = InitSample
-	         $019d = InitSample.init_oam_u1
-	         $01a9 = InitSample.load_tile_u2
-	         $01c4 = InitSample.load_letter_copy_u3
-	         $01dd = InitSample.load_letter_copy_u4
-	         $01f1 = InitSample.DrawTile0Line
-	         $01f7 = InitSample.DrawTile0Chr
-	         $0222 = InitSample.DrawTile1Line
-	         $0228 = InitSample.DrawTile1Chr
-	         $0254 = UpdateSample
-	         $0258 = UpdateSample.wait_vblank
-	         $02b6 = UpdateSample.load_letter_copy_u5
-	         $02cf = UpdateSample.load_letter_copy_u6
-	         $02da = UpdateSample.display_new_letters_done
-	EMPTY: $02e0-$49ff ($4720 bytes)
+	         $01a2 = InitSample.init_oam_u1
+	         $01ae = InitSample.load_tile_u2
+	         $01ca = InitSample.load_letter_copy_u3
+	         $01e4 = InitSample.load_letter_copy_u4
+	         $01f8 = InitSample.DrawTile0Line
+	         $01fe = InitSample.DrawTile0Chr
+	         $0229 = InitSample.DrawTile1Line
+	         $022f = InitSample.DrawTile1Chr
+	         $025b = UpdateSample
+	         $025f = UpdateSample.wait_vblank
+	         $02c2 = UpdateSample.load_letter_copy_u5
+	         $02de = UpdateSample.load_letter_copy_u6
+	         $02e9 = UpdateSample.display_new_letters_done
+	         $0302 = UpdateSample.update_tile_0_done
+	         $0306 = UpdateSample.update_tile_1_done
+	         $030d = UpdateSample.random_letter_done
+	EMPTY: $0313-$49ff ($46ed bytes)
 	SECTION: $4a00-$63ff ($1a00 bytes) ["game_tile_alphabet_data"]
 	SECTION: $6400-$645f ($0060 bytes) ["graphics_data"]
 	         $6400 = EmptyTile
@@ -47,4 +50,4 @@ ROM0 bank #0:
 	EMPTY: $7cd1-$7cdf ($000f bytes)
 	SECTION: $7ce0-$7cf0 ($0011 bytes) ["tilemaps_data_row6"]
 	EMPTY: $7cf1-$7fff ($030f bytes)
-	TOTAL EMPTY: $62fa bytes
+	TOTAL EMPTY: $62c7 bytes

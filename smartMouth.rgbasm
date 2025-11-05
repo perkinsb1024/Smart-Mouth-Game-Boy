@@ -51,7 +51,8 @@ endm
 ; LoadLetter 1 CHAR_Z_ADDR
 macro LoadLetter
     ld c, 255
-    ld hl, \2
+    ld h, 0
+    ld l, \2
     copy e, [hl]
     inc hl
     copy d, [hl]
@@ -97,8 +98,9 @@ InitSample:
     copy [WRAM_TILE_0_Y], 36
     copy [WRAM_TILE_1_X], 36 + 8 * 9
     copy [WRAM_TILE_1_Y], 36
-    copy [WRAM_TILE_0_CHAR], 0
-    copy [WRAM_TILE_1_CHAR], 25
+    copy [WRAM_TILE_0_CHAR], CHAR_B_ADDR
+    copy [WRAM_TILE_1_CHAR], CHAR_P_ADDR
+    copy [WRAM_TILE_TO_UPDATE], 0
     copy [WRAM_TILE_INDEX], 1
 
     ; init the palette
@@ -214,12 +216,37 @@ UpdateSample:
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
     jr nz, .display_new_letters_done
         xor a
+        ; Turn off LCD - Make sure this is near the top of VBlank
         ld [rLCDC], a
-        LoadLetter 0, CHAR_B_ADDR
-        LoadLetter 1, CHAR_P_ADDR
+        ld a, 26
+        ld a, [WRAM_TILE_0_CHAR]
+        LoadLetter 0, a
+        ld a, [WRAM_TILE_1_CHAR]
+        LoadLetter 1, a
         ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
         ld [rLCDC], a
     .display_new_letters_done
+
+    ld a, [rDIV]
+    and a, %00011111
+    cp a, 26
+    jr nc, .random_letter_done
+    sla a
+    ld b, a
+    ld a, [WRAM_TILE_TO_UPDATE]
+    cp a, 0
+    jr z, .update_tile_0_done
+    ld a, b
+    ld [WRAM_TILE_0_CHAR], a
+    jr .update_tile_1_done
+.update_tile_0_done
+    ld a, b
+    ld [WRAM_TILE_1_CHAR], a
+.update_tile_1_done
+    ld a, [WRAM_TILE_TO_UPDATE]
+    cpl a
+    ld [WRAM_TILE_TO_UPDATE], a
+.random_letter_done
 
 
 
