@@ -1,0 +1,50 @@
+SUMMARY:
+	ROM0: 7386 bytes used / 25382 free
+
+ROM0 bank #0:
+	SECTION: $0000-$0033 ($0034 bytes) ["game_tile_addresses"]
+	EMPTY: $0034-$003f ($000c bytes)
+	SECTION: $0040-$0047 ($0008 bytes) ["vblank_interrupt"]
+	SECTION: $0048-$005a ($0013 bytes) ["main"]
+	         $0048 = main
+	         $0048 = main.wait_vblank_u1
+	         $0056 = main.loop
+	EMPTY: $005b-$00ff ($00a5 bytes)
+	SECTION: $0100-$014f ($0050 bytes) ["header"]
+	         $0100 = entrypoint
+	SECTION: $0150-$02b3 ($0164 bytes) ["sample"]
+	         $0150 = InitSample
+	         $019d = InitSample.init_oam_u1
+	         $01a9 = InitSample.load_tile_u2
+	         $01b9 = InitSample.load_letter_copy_u3
+	         $01c7 = InitSample.load_letter_copy_u4
+	         $01db = InitSample.DrawTile0Line
+	         $01e1 = InitSample.DrawTile0Chr
+	         $020c = InitSample.DrawTile1Line
+	         $0212 = InitSample.DrawTile1Chr
+	         $023e = UpdateSample
+	         $0242 = UpdateSample.wait_vblank
+	         $0295 = UpdateSample.load_letter_copy_u5
+	         $02a3 = UpdateSample.load_letter_copy_u6
+	         $02ae = UpdateSample.display_new_letters_done
+	EMPTY: $02b4-$49ff ($474c bytes)
+	SECTION: $4a00-$63ff ($1a00 bytes) ["game_tile_alphabet_data"]
+	SECTION: $6400-$645f ($0060 bytes) ["graphics_data"]
+	         $6400 = EmptyTile
+	         $6410 = GameTile
+	EMPTY: $6460-$7c1f ($17c0 bytes)
+	SECTION: $7c20-$7c30 ($0011 bytes) ["tilemaps_data"]
+	EMPTY: $7c31-$7c3f ($000f bytes)
+	SECTION: $7c40-$7c50 ($0011 bytes) ["tilemaps_data_row1"]
+	EMPTY: $7c51-$7c5f ($000f bytes)
+	SECTION: $7c60-$7c70 ($0011 bytes) ["tilemaps_data_row2"]
+	EMPTY: $7c71-$7c7f ($000f bytes)
+	SECTION: $7c80-$7c90 ($0011 bytes) ["tilemaps_data_row3"]
+	EMPTY: $7c91-$7c9f ($000f bytes)
+	SECTION: $7ca0-$7cb0 ($0011 bytes) ["tilemaps_data_row4"]
+	EMPTY: $7cb1-$7cbf ($000f bytes)
+	SECTION: $7cc0-$7cd0 ($0011 bytes) ["tilemaps_data_row5"]
+	EMPTY: $7cd1-$7cdf ($000f bytes)
+	SECTION: $7ce0-$7cf0 ($0011 bytes) ["tilemaps_data_row6"]
+	EMPTY: $7cf1-$7fff ($030f bytes)
+	TOTAL EMPTY: $6326 bytes

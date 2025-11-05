@@ -1,0 +1,59 @@
+if !def(ALPHABET_RGBINC)
+def ALPHABET_RGBINC equ 1
+
+def CHAR_A equ 0
+def CHAR_B equ 1
+def CHAR_C equ 2
+def CHAR_D equ 3
+def CHAR_E equ 4
+def CHAR_F equ 5
+def CHAR_G equ 6
+def CHAR_H equ 7
+def CHAR_I equ 8
+def CHAR_J equ 9
+def CHAR_K equ 10
+def CHAR_L equ 11
+def CHAR_M equ 12
+def CHAR_N equ 13
+def CHAR_O equ 14
+def CHAR_P equ 15
+def CHAR_Q equ 16
+def CHAR_R equ 17
+def CHAR_S equ 18
+def CHAR_T equ 19
+def CHAR_U equ 20
+def CHAR_V equ 21
+def CHAR_W equ 22
+def CHAR_X equ 23
+def CHAR_Y equ 24
+def CHAR_Z equ 25
+
+def CHAR_A_ADDR equ 0
+def CHAR_B_ADDR equ 2
+def CHAR_C_ADDR equ 4
+def CHAR_D_ADDR equ 6
+def CHAR_E_ADDR equ 8
+def CHAR_F_ADDR equ 10
+def CHAR_G_ADDR equ 12
+def CHAR_H_ADDR equ 14
+def CHAR_I_ADDR equ 16
+def CHAR_J_ADDR equ 18
+def CHAR_K_ADDR equ 20
+def CHAR_L_ADDR equ 22
+def CHAR_M_ADDR equ 24
+def CHAR_N_ADDR equ 26
+def CHAR_O_ADDR equ 28
+def CHAR_P_ADDR equ 30
+def CHAR_Q_ADDR equ 32
+def CHAR_R_ADDR equ 34
+def CHAR_S_ADDR equ 36
+def CHAR_T_ADDR equ 38
+def CHAR_U_ADDR equ 40
+def CHAR_V_ADDR equ 42
+def CHAR_W_ADDR equ 44
+def CHAR_X_ADDR equ 46
+def CHAR_Y_ADDR equ 48
+def CHAR_Z_ADDR equ 50
+
+endc
+

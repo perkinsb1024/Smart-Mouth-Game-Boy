@@ -1,0 +1,303 @@
+include "utils.rgbinc"
+include "alphabet.rgbinc"
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+def TILES_COUNT                     equ (384)
+def BYTES_PER_TILE                  equ (16)
+def TILES_BYTE_SIZE                 equ (TILES_COUNT * BYTES_PER_TILE)
+def TILEMAP_BYTE_SIZE               equ (1024)
+def GRAPHICS_DATA_SIZE              equ (TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE)
+def GRAPHICS_DATA_ADDRESS_END       equ ($8000)
+def GRAPHICS_DATA_ADDRESS_START     equ (GRAPHICS_DATA_ADDRESS_END - GRAPHICS_DATA_SIZE)
+def TILE_ALPHABET_SIZE              equ (16 * 16 * 26)
+def TILE_ALPHABET_START             equ (GRAPHICS_DATA_ADDRESS_START - TILE_ALPHABET_SIZE)
+
+rsset _RAM
+
+def WRAM_IS_VBLANK                  rb 1
+def WRAM_PAD_INPUT                  rb sizeof_PAD_INPUT
+
+def WRAM_TILE_0_X                   rb 1
+def WRAM_TILE_0_Y                   rb 1
+def WRAM_TILE_1_X                   rb 1
+def WRAM_TILE_1_Y                   rb 1
+def WRAM_TILE_0_CHAR                rb 1
+def WRAM_TILE_1_CHAR                rb 1
+def WRAM_TILE_TO_UPDATE             rb 1
+def WRAM_TILE_INDEX                 rb 1
+
+def WRAM_END                        rb 0
+
+; sanity checks
+def WRAM_USAGE                      equ (WRAM_END - _RAM)
+println "WRAM usage: {d:WRAM_USAGE} bytes"
+assert WRAM_USAGE <= $2000, "Too many bytes used in WRAM"
+
+; load the graphics data from ROM to VRAM
+macro LoadGraphicsDataIntoVRAM
+    ld de, GRAPHICS_DATA_ADDRESS_START
+    ld hl, _VRAM8000
+    .load_tile\@
+        ld a, [de]
+        inc de
+        ld [hli], a
+        ld a, d
+        cp a, high(GRAPHICS_DATA_ADDRESS_END)
+        jr nz, .load_tile\@
+endm
+
+; LoadLetter 0 CHAR_A
+; LoadLetter 1 CHAR_Z
+macro LoadLetter
+    ld c, 255
+    ld de, TILE_ALPHABET_START + (\2 * 256)
+    ld hl, _VRAM8800 + (\1 * 256)
+.load_letter_copy\@
+    copy [hli], [de]
+    inc de
+    dec c
+    jr nz, .load_letter_copy\@
+endm
+
+; clear the OAM
+macro InitOAM
+    ld c, OAM_COUNT
+    ld hl, _OAMRAM + OAMA_Y
+    ld de, sizeof_OAM_ATTRS
+    .init_oam\@
+        ld [hl], 0
+        add hl, de
+        dec c
+        jr nz, .init_oam\@
+endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+section "vblank_interrupt", rom0[$0040]
+    push af
+    copy [WRAM_IS_VBLANK], 1
+    pop af
+    reti
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+section "sample", rom0
+
+InitSample:
+    ; Set WRAM variables
+    InitPadInput WRAM_PAD_INPUT
+    copy [WRAM_TILE_0_X], 36
+    copy [WRAM_TILE_0_Y], 36
+    copy [WRAM_TILE_1_X], 36 + 8 * 9
+    copy [WRAM_TILE_1_Y], 36
+    copy [WRAM_TILE_0_CHAR], 0
+    copy [WRAM_TILE_1_CHAR], 25
+    copy [WRAM_TILE_INDEX], 1
+
+    ; init the palette
+    ld a, %11100100
+    ld [rBGP], a
+    ld [rOBP0], a
+    ld a, %00011110
+    ld [rOBP1], a
+
+    ; Set screen scroll
+    xor a
+    ld [rSCX], a
+    ld [rSCY], a
+
+    ; Init Graphics
+    InitOAM
+    LoadGraphicsDataIntoVRAM
+    LoadLetter 0, CHAR_A
+    LoadLetter 1, CHAR_Z
+
+    ; Draw the first Game Tile
+    ld b, 4
+    copy e, [WRAM_TILE_0_Y]
+    copy [WRAM_TILE_INDEX], $80
+    ld hl, _OAMRAM
+.DrawTile0Line
+    ld c, 4
+    copy d, [WRAM_TILE_0_X]
+.DrawTile0Chr
+    ; Set Y position
+    copy [hli], e
+    ; Set X position
+    copy [hli], d
+    ; Increment X position
+    ld a, d
+    add a, 8
+    ld d, a
+    ; Set tile index
+    copy [hli], [WRAM_TILE_INDEX]
+    ; Increment tile index
+    ld a, [WRAM_TILE_INDEX]
+    inc a
+    ld [WRAM_TILE_INDEX], a
+    ; Set palette
+    copy [hli], OAMF_PAL1
+    dec c
+    jr nz, .DrawTile0Chr
+    ; Increment Y position
+    ld a, e
+    add a, 8
+    ld e, a
+    dec b
+    jr nz, .DrawTile0Line
+
+    ; Draw the second Game Tile
+    ld b, 4
+    copy e, [WRAM_TILE_1_Y]
+    copy [WRAM_TILE_INDEX], $90
+
+.DrawTile1Line
+    ld c, 4
+    copy d, [WRAM_TILE_1_X]
+.DrawTile1Chr
+    ; Set Y position
+    copy [hli], e
+    ; Set X position
+    copy [hli], d
+    ; Increment X position
+    ld a, d
+    add a, 8
+    ld d, a
+    ; Set tile index
+    copy [hli], [WRAM_TILE_INDEX]
+    ; Increment tile index
+    ld a, [WRAM_TILE_INDEX]
+    inc a
+    ld [WRAM_TILE_INDEX], a
+    ; Set palette
+    copy [hli], OAMF_PAL1
+    dec c
+    jr nz, .DrawTile1Chr
+    ; Increment Y position
+    ld a, e
+    add a, 8
+    ld e, a
+    dec b
+    jr nz, .DrawTile1Line
+
+    ; set the graphics parameters and turn back LCD on
+    ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
+    ld [rLCDC], a
+
+    ; enable interrupts
+    ld a, IEF_VBLANK
+    ld [rIE], a
+    ei
+
+    ret
+
+UpdateSample:
+    ld hl, WRAM_IS_VBLANK
+    xor a
+    .wait_vblank
+        halt
+        cp a, [hl]
+        jr z, .wait_vblank
+        ld [hl], a
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; vblank
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UpdatePadInput WRAM_PAD_INPUT
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
+    jr nz, .display_new_letters_done
+        xor a
+        ld [rLCDC], a
+        LoadLetter 0, CHAR_B
+        LoadLetter 1, CHAR_P
+        ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
+        ld [rLCDC], a
+    .display_new_letters_done
+
+    ; Mark end of VBlank
+    copy [WRAM_IS_VBLANK], 0
+    ret
+
+export InitSample, UpdateSample
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+section "game_tile_addresses", rom0[0]
+def REPT_GAME_TILE_ADDR = 0
+REPT 26
+    dw REPT_GAME_TILE_ADDR
+    def REPT_GAME_TILE_ADDR = REPT_GAME_TILE_ADDR + 256
+ENDR
+
+section "game_tile_alphabet_data", rom0[TILE_ALPHABET_START]
+incbin "assets/tile_alphabet/A.chr"
+incbin "assets/tile_alphabet/B.chr"
+incbin "assets/tile_alphabet/C.chr"
+incbin "assets/tile_alphabet/D.chr"
+incbin "assets/tile_alphabet/E.chr"
+incbin "assets/tile_alphabet/F.chr"
+incbin "assets/tile_alphabet/G.chr"
+incbin "assets/tile_alphabet/H.chr"
+incbin "assets/tile_alphabet/I.chr"
+incbin "assets/tile_alphabet/J.chr"
+incbin "assets/tile_alphabet/K.chr"
+incbin "assets/tile_alphabet/L.chr"
+incbin "assets/tile_alphabet/M.chr"
+incbin "assets/tile_alphabet/N.chr"
+incbin "assets/tile_alphabet/O.chr"
+incbin "assets/tile_alphabet/P.chr"
+incbin "assets/tile_alphabet/Q.chr"
+incbin "assets/tile_alphabet/R.chr"
+incbin "assets/tile_alphabet/S.chr"
+incbin "assets/tile_alphabet/T.chr"
+incbin "assets/tile_alphabet/U.chr"
+incbin "assets/tile_alphabet/V.chr"
+incbin "assets/tile_alphabet/W.chr"
+incbin "assets/tile_alphabet/X.chr"
+incbin "assets/tile_alphabet/Y.chr"
+incbin "assets/tile_alphabet/Z.chr"
+
+section "graphics_data", rom0[GRAPHICS_DATA_ADDRESS_START]
+EmptyTile:
+dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
+GameTile:
+incbin "assets/GameTile.chr"
+
+
+section "tilemaps_data", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 1 * 32]
+db $00, $00, $00
+db $01, $02, $02, $02, $03
+db $00, $00, $00, 00
+db $01, $02, $02, $02, $03
+section "tilemaps_data_row1", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 2 * 32]
+db $00, $00, $00
+db $02, $02, $02, $02, $02
+db $00, $00, $00, 00
+db $02, $02, $02, $02, $02
+section "tilemaps_data_row2", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 3 * 32]
+db $00, $00, $00
+db $02, $02, $02, $02, $02
+db $00, $00, $00, 00
+db $02, $02, $02, $02, $02
+section "tilemaps_data_row3", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 4 * 32]
+db $00, $00, $00
+db $02, $02, $02, $02, $02
+db $00, $00, $00, 00
+db $02, $02, $02, $02, $02
+section "tilemaps_data_row4", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 5 * 32]
+db $00, $00, $00
+db $02, $02, $02, $02, $02
+db $00, $00, $00, 00
+db $02, $02, $02, $02, $02
+section "tilemaps_data_row5", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 6 * 32]
+db $00, $00, $00
+db $02, $02, $02, $02, $02
+db $00, $00, $00, 00
+db $02, $02, $02, $02, $02
+section "tilemaps_data_row6", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 7 * 32]
+db $00, $00, $00
+db $04, $02, $02, $02, $05
+db $00, $00, $00, 00
+db $04, $02, $02, $02, $05
+

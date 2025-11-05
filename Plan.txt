@@ -1,0 +1,39 @@
+Phase 1
+- Generate simple tileset
+    - Game tiles
+    - 26 letters
+- Draw basic game play
+    - Two game tiles
+    - A letter over top of each one
+        - Open question: Are letters sprites or part of the background
+            - Pros to sprites: You can do different color text / game tiles on DMG (two OBJ palettes)
+            - Cons to sprites: You are limited to about 32x32px (16 sprites each, 32 total). Maximum 32x36
+            - Background could also use different colors, you'd just need to load double the tiles. But if you only load two letters at a time, that could work
+- Listen to button press events
+- On A button press generate random number
+- Link random number to letters and display new, random letters on game tiles
+
+Phase 2
+- Improve graphics (if needed)
+- Render four players ("Player 1" through "Player 4")
+- Use arrow keys to adjust score (left and right navigate between players, up and down adjust score)
+- Start button saves game state (just score for now)
+- Load game state on game start
+
+Phase 3
+- Game Tile flip animation
+- Countdown timer
+- Add Game Boy Color support
+- Add Menu
+    - Save Game
+    - Reset Scores
+
+Phase 4
+- Update menu to include "Edit Player Names"
+- Build edit player name interface
+- Add player names to save / load
+
+Out of Scope
+- Having a dictionary
+    - Count of valid answers
+    - Check / display valid answers
