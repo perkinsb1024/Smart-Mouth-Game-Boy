@@ -51,8 +51,10 @@ endm
 ; LoadLetter 1 CHAR_Z_ADDR
 macro LoadLetter
     ld c, 255
-    copy e, [\2]
-    copy d, [\2 + 1]
+    ld hl, \2
+    copy e, [hl]
+    inc hl
+    copy d, [hl]
     ld hl, TILE_ALPHABET_START
     add hl, de
     ld_r16_r16 de, hl
@@ -218,6 +220,8 @@ UpdateSample:
         ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
         ld [rLCDC], a
     .display_new_letters_done
+
+
 
     ; Mark end of VBlank
     copy [WRAM_IS_VBLANK], 0
