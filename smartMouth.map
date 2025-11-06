@@ -1,41 +1,42 @@
 SUMMARY:
-	ROM0: 7481 bytes used / 25287 free
+	ROM0: 8837 bytes used / 23931 free
 
 ROM0 bank #0:
-	SECTION: $0000-$0033 ($0034 bytes) ["game_tile_addresses"]
-	EMPTY: $0034-$003f ($000c bytes)
+	SECTION: $0000-$0012 ($0013 bytes) ["main"]
+	         $0000 = main
+	         $0000 = main.wait_vblank_u1
+	         $000e = main.loop
+	EMPTY: $0013-$003f ($002d bytes)
 	SECTION: $0040-$0047 ($0008 bytes) ["vblank_interrupt"]
-	SECTION: $0048-$005a ($0013 bytes) ["main"]
-	         $0048 = main
-	         $0048 = main.wait_vblank_u1
-	         $0056 = main.loop
-	EMPTY: $005b-$00ff ($00a5 bytes)
+	EMPTY: $0048-$00ff ($00b8 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
 	SECTION: $0150-$0312 ($01c3 bytes) ["sample"]
 	         $0150 = InitSample
 	         $01a2 = InitSample.init_oam_u1
 	         $01ae = InitSample.load_tile_u2
-	         $01ca = InitSample.load_letter_copy_u3
-	         $01e4 = InitSample.load_letter_copy_u4
-	         $01f8 = InitSample.DrawTile0Line
-	         $01fe = InitSample.DrawTile0Chr
-	         $0229 = InitSample.DrawTile1Line
-	         $022f = InitSample.DrawTile1Chr
-	         $025b = UpdateSample
-	         $025f = UpdateSample.wait_vblank
-	         $02c2 = UpdateSample.load_letter_copy_u5
-	         $02de = UpdateSample.load_letter_copy_u6
-	         $02e9 = UpdateSample.display_new_letters_done
+	         $01c5 = InitSample.load_letter_copy_u3
+	         $01da = InitSample.load_letter_copy_u4
+	         $01ee = InitSample.DrawTile0Line
+	         $01f4 = InitSample.DrawTile0Chr
+	         $021f = InitSample.DrawTile1Line
+	         $0225 = InitSample.DrawTile1Chr
+	         $0251 = UpdateSample
+	         $0255 = UpdateSample.wait_vblank
+	         $02bf = UpdateSample.load_letter_copy_u5
+	         $02e4 = UpdateSample.load_letter_copy_u6
+	         $02ef = UpdateSample.display_new_letters_done
 	         $0302 = UpdateSample.update_tile_0_done
 	         $0306 = UpdateSample.update_tile_1_done
 	         $030d = UpdateSample.random_letter_done
-	EMPTY: $0313-$49ff ($46ed bytes)
+	EMPTY: $0313-$497f ($466d bytes)
+	SECTION: $4980-$49ff ($0080 bytes) ["game_tile_addresses"]
 	SECTION: $4a00-$63ff ($1a00 bytes) ["game_tile_alphabet_data"]
-	SECTION: $6400-$645f ($0060 bytes) ["graphics_data"]
+	SECTION: $6400-$695f ($0560 bytes) ["graphics_data"]
 	         $6400 = EmptyTile
 	         $6410 = GameTile
-	EMPTY: $6460-$7c1f ($17c0 bytes)
+	         $6460 = Font
+	EMPTY: $6960-$7c1f ($12c0 bytes)
 	SECTION: $7c20-$7c30 ($0011 bytes) ["tilemaps_data"]
 	EMPTY: $7c31-$7c3f ($000f bytes)
 	SECTION: $7c40-$7c50 ($0011 bytes) ["tilemaps_data_row1"]
@@ -50,4 +51,4 @@ ROM0 bank #0:
 	EMPTY: $7cd1-$7cdf ($000f bytes)
 	SECTION: $7ce0-$7cf0 ($0011 bytes) ["tilemaps_data_row6"]
 	EMPTY: $7cf1-$7fff ($030f bytes)
-	TOTAL EMPTY: $62c7 bytes
+	TOTAL EMPTY: $5d7b bytes

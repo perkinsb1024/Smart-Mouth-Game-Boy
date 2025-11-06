@@ -12,6 +12,8 @@ def GRAPHICS_DATA_ADDRESS_END       equ ($8000)
 def GRAPHICS_DATA_ADDRESS_START     equ (GRAPHICS_DATA_ADDRESS_END - GRAPHICS_DATA_SIZE)
 def TILE_ALPHABET_SIZE              equ (16 * 16 * 26)
 def TILE_ALPHABET_START             equ (GRAPHICS_DATA_ADDRESS_START - TILE_ALPHABET_SIZE)
+def ALPHABET_MAP_SIZE               equ (128)
+def ALPHABET_MAP_START              equ (TILE_ALPHABET_START - ALPHABET_MAP_SIZE)
 
 rsset _RAM
 
@@ -47,16 +49,13 @@ macro LoadGraphicsDataIntoVRAM
         jr nz, .load_tile\@
 endm
 
-; LoadLetter 0 CHAR_A_ADDR
-; LoadLetter 1 CHAR_Z_ADDR
-macro LoadLetter
+; LoadLetterFromMapIndex 0, CHAR_A_ADDR_OFFSET
+; LoadLetterFromMapIndex 1, CHAR_Z_ADDR_OFFSET
+macro LoadLetterFromAddressOffset
     ld c, 255
-    ld h, 0
-    ld l, \2
-    copy e, [hl]
-    inc hl
-    copy d, [hl]
     ld hl, TILE_ALPHABET_START
+    ld d, high(\2)
+    ld e, low(\2)
     add hl, de
     ld_r16_r16 de, hl
     ld hl, _VRAM8800 + (\1 * 256)
@@ -65,6 +64,20 @@ macro LoadLetter
     inc de
     dec c
     jr nz, .load_letter_copy\@
+endm
+
+; LoadLetter 0, N (N = 0 - 63)
+macro LoadLetterFromMapIndex
+    ld h, 0
+    ld l, \2
+    sla l
+    ld d, high(ALPHABET_MAP_START)
+    ld e, low(ALPHABET_MAP_START)
+    add hl, de
+    copy e, [hl]
+    inc hl
+    copy d, [hl]
+    LoadLetterFromAddressOffset \1, de
 endm
 
 ; clear the OAM
@@ -98,8 +111,8 @@ InitSample:
     copy [WRAM_TILE_0_Y], 36
     copy [WRAM_TILE_1_X], 36 + 8 * 9
     copy [WRAM_TILE_1_Y], 36
-    copy [WRAM_TILE_0_CHAR], CHAR_B_ADDR
-    copy [WRAM_TILE_1_CHAR], CHAR_P_ADDR
+    copy [WRAM_TILE_0_CHAR], CHAR_A
+    copy [WRAM_TILE_1_CHAR], CHAR_A
     copy [WRAM_TILE_TO_UPDATE], 0
     copy [WRAM_TILE_INDEX], 1
 
@@ -118,8 +131,8 @@ InitSample:
     ; Init Graphics
     InitOAM
     LoadGraphicsDataIntoVRAM
-    LoadLetter 0, CHAR_A_ADDR
-    LoadLetter 1, CHAR_Z_ADDR
+    LoadLetterFromAddressOffset 0, CHAR_A_ADDR_OFFSET
+    LoadLetterFromAddressOffset 1, CHAR_Z_ADDR_OFFSET
 
     ; Draw the first Game Tile
     ld b, 4
@@ -218,20 +231,16 @@ UpdateSample:
         xor a
         ; Turn off LCD - Make sure this is near the top of VBlank
         ld [rLCDC], a
-        ld a, 26
         ld a, [WRAM_TILE_0_CHAR]
-        LoadLetter 0, a
+        LoadLetterFromMapIndex 0, a
         ld a, [WRAM_TILE_1_CHAR]
-        LoadLetter 1, a
+        LoadLetterFromMapIndex 1, a
         ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
         ld [rLCDC], a
     .display_new_letters_done
 
     ld a, [rDIV]
-    and a, %00011111
-    cp a, 26
-    jr nc, .random_letter_done
-    sla a
+    and a, %00111111
     ld b, a
     ld a, [WRAM_TILE_TO_UPDATE]
     cp a, 0
@@ -257,13 +266,25 @@ UpdateSample:
 export InitSample, UpdateSample
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-section "game_tile_addresses", rom0[0]
-def REPT_GAME_TILE_ADDR = 0
-REPT 26
-    dw REPT_GAME_TILE_ADDR
-    def REPT_GAME_TILE_ADDR = REPT_GAME_TILE_ADDR + 256
-ENDR
+; AABBBCCCDDDEEEFFGGGHHHIIJKLLLMMMNNNNOOOPPPQRRRSSSSTTTTUUUVWWXYYZ
+; Weighted alphabet to make more common letters appear more frequently
+section "game_tile_addresses", rom0[ALPHABET_MAP_START]
+dw CHAR_A_ADDR_OFFSET, CHAR_A_ADDR_OFFSET, CHAR_B_ADDR_OFFSET, CHAR_B_ADDR_OFFSET
+dw CHAR_B_ADDR_OFFSET, CHAR_C_ADDR_OFFSET, CHAR_C_ADDR_OFFSET, CHAR_C_ADDR_OFFSET
+dw CHAR_D_ADDR_OFFSET, CHAR_D_ADDR_OFFSET, CHAR_D_ADDR_OFFSET, CHAR_E_ADDR_OFFSET
+dw CHAR_E_ADDR_OFFSET, CHAR_E_ADDR_OFFSET, CHAR_F_ADDR_OFFSET, CHAR_F_ADDR_OFFSET
+dw CHAR_G_ADDR_OFFSET, CHAR_G_ADDR_OFFSET, CHAR_G_ADDR_OFFSET, CHAR_H_ADDR_OFFSET
+dw CHAR_H_ADDR_OFFSET, CHAR_H_ADDR_OFFSET, CHAR_I_ADDR_OFFSET, CHAR_I_ADDR_OFFSET
+dw CHAR_J_ADDR_OFFSET, CHAR_K_ADDR_OFFSET, CHAR_L_ADDR_OFFSET, CHAR_L_ADDR_OFFSET
+dw CHAR_L_ADDR_OFFSET, CHAR_M_ADDR_OFFSET, CHAR_M_ADDR_OFFSET, CHAR_M_ADDR_OFFSET
+dw CHAR_N_ADDR_OFFSET, CHAR_N_ADDR_OFFSET, CHAR_N_ADDR_OFFSET, CHAR_N_ADDR_OFFSET
+dw CHAR_O_ADDR_OFFSET, CHAR_O_ADDR_OFFSET, CHAR_O_ADDR_OFFSET, CHAR_P_ADDR_OFFSET
+dw CHAR_P_ADDR_OFFSET, CHAR_P_ADDR_OFFSET, CHAR_Q_ADDR_OFFSET, CHAR_R_ADDR_OFFSET
+dw CHAR_R_ADDR_OFFSET, CHAR_R_ADDR_OFFSET, CHAR_S_ADDR_OFFSET, CHAR_S_ADDR_OFFSET
+dw CHAR_S_ADDR_OFFSET, CHAR_S_ADDR_OFFSET, CHAR_T_ADDR_OFFSET, CHAR_T_ADDR_OFFSET
+dw CHAR_T_ADDR_OFFSET, CHAR_T_ADDR_OFFSET, CHAR_U_ADDR_OFFSET, CHAR_U_ADDR_OFFSET
+dw CHAR_U_ADDR_OFFSET, CHAR_V_ADDR_OFFSET, CHAR_W_ADDR_OFFSET, CHAR_W_ADDR_OFFSET
+dw CHAR_X_ADDR_OFFSET, CHAR_Y_ADDR_OFFSET, CHAR_Y_ADDR_OFFSET, CHAR_Z_ADDR_OFFSET
 
 section "game_tile_alphabet_data", rom0[TILE_ALPHABET_START]
 incbin "assets/tile_alphabet/A.chr"
@@ -298,6 +319,8 @@ EmptyTile:
 dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
 GameTile:
 incbin "assets/GameTile.chr"
+Font:
+incbin "assets/Font.chr"
 
 
 section "tilemaps_data", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 1 * 32]
