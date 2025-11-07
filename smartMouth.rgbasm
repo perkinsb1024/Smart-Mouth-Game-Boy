@@ -17,6 +17,11 @@ def ALPHABET_MAP_START              equ (TILE_ALPHABET_START - ALPHABET_MAP_SIZE
 
 def INITIAL_ARROW_ADDRESS           equ (_SCRN0 + 10 * SCRN_VX_B + 2)
 def ARROW_ADDRESS_STEP              equ (SCRN_VX_B * 2)
+def SCORE_ADDRESS_STEP              equ (ARROW_ADDRESS_STEP)
+def PLAYER_1_SCORE_ADDRESS          equ (INITIAL_ARROW_ADDRESS + 12)
+def PLAYER_2_SCORE_ADDRESS          equ (PLAYER_1_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
+def PLAYER_3_SCORE_ADDRESS          equ (PLAYER_2_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
+def PLAYER_4_SCORE_ADDRESS          equ (PLAYER_3_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
 
 rsset _RAM
 
@@ -123,7 +128,46 @@ macro DrawActivePlayerArrow
 .player_4_arrow_done
     add hl, de
     inc b
+endm
 
+macro DrawScore
+    ld h, high(\1)
+    ld l, low(\1)
+    ld a, [\2]
+    cp a, 10
+    jr nc, .draw_double_digit_score\@
+    ld b, a
+    ld a, FONT_0_OFFSET
+    add a, b
+    ld [hl], a
+    inc hl
+    ld [hl], FONT_SPACE_OFFSET
+    jr .draw_score_done\@
+.draw_double_digit_score\@
+    ld b, 255
+.score_count_tens\@
+    inc b
+    sub a, 10
+    jr nc, .score_count_tens\@
+    ; b contains tens digit
+    add a, 10
+    ld c, a
+    ; c contains ones digit
+    ld a, FONT_0_OFFSET
+    add a, b
+    ld [hl], a
+    inc hl
+    ld a, FONT_0_OFFSET
+    add a, c
+    ld [hl], a
+.draw_score_done\@
+endm
+
+macro DrawScores
+    DrawScore PLAYER_1_SCORE_ADDRESS, WRAM_PLAYER_1_SCORE
+    DrawScore PLAYER_2_SCORE_ADDRESS, WRAM_PLAYER_2_SCORE
+    DrawScore PLAYER_3_SCORE_ADDRESS, WRAM_PLAYER_3_SCORE
+    DrawScore PLAYER_4_SCORE_ADDRESS, WRAM_PLAYER_4_SCORE
 endm
 
 ; clear the OAM
@@ -278,23 +322,9 @@ UpdateSample:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UpdatePadInput WRAM_PAD_INPUT
 
-    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_DOWN
-    jr nz, .increment_arrow_done
-    ld a, [WRAM_PLAYER_ARROW_INDEX]
-    inc a
-    and a, %00000011
-    ld [WRAM_PLAYER_ARROW_INDEX], a
-.increment_arrow_done
-
-    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_UP
-    jr nz, .decrement_arrow_done
-    ld a, [WRAM_PLAYER_ARROW_INDEX]
-    dec a
-    and a, %00000011
-    ld [WRAM_PLAYER_ARROW_INDEX], a
-.decrement_arrow_done
 
     DrawActivePlayerArrow
+    DrawScores
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
     jr nz, .display_new_letters_done
@@ -311,7 +341,6 @@ UpdateSample:
 
     ld a, [rDIV]
     and a, %00111111
-    ld b, b
     ld b, a
     ld a, [WRAM_TILE_TO_UPDATE]
     cp a, 0
@@ -329,6 +358,52 @@ UpdateSample:
 .random_letter_done
 
 
+; Perform work that can be done outside of VBlank
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_DOWN
+    jr nz, .increment_arrow_done
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    inc a
+    and a, %00000011
+    ld [WRAM_PLAYER_ARROW_INDEX], a
+.increment_arrow_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_UP
+    jr nz, .decrement_arrow_done
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    dec a
+    and a, %00000011
+    ld [WRAM_PLAYER_ARROW_INDEX], a
+.decrement_arrow_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_RIGHT
+    jr nz, .increment_score_done
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ld b, a
+    ld d, high(WRAM_PLAYER_1_SCORE)
+    ld a, low(WRAM_PLAYER_1_SCORE)
+    add a, b
+    ld e, a
+    ld a, [de]
+    cp a, 99
+    jr z, .increment_score_done
+    inc a
+    ld [de], a
+.increment_score_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_LEFT
+    jr nz, .decrement_score_done
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ld b, a
+    ld d, high(WRAM_PLAYER_1_SCORE)
+    ld a, low(WRAM_PLAYER_1_SCORE)
+    add a, b
+    ld e, a
+    ld a, [de]
+    cp a, 0
+    jr z, .decrement_score_done
+    dec a
+    ld [de], a
+.decrement_score_done
 
     ; Mark end of VBlank
     copy [WRAM_IS_VBLANK], 0
