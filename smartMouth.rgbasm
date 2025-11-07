@@ -23,6 +23,10 @@ def PLAYER_2_SCORE_ADDRESS          equ (PLAYER_1_SCORE_ADDRESS + SCORE_ADDRESS_
 def PLAYER_3_SCORE_ADDRESS          equ (PLAYER_2_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
 def PLAYER_4_SCORE_ADDRESS          equ (PLAYER_3_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
 
+def SAVE_HEADER_D                   equ $44
+def SAVE_HEADER_M                   equ $4D
+def SAVE_HEADER_G                   equ $47
+
 rsset _RAM
 
 def WRAM_IS_VBLANK                  rb 1
@@ -171,6 +175,59 @@ macro DrawScores
     DrawScore PLAYER_4_SCORE_ADDRESS, WRAM_PLAYER_4_SCORE
 endm
 
+macro LoadSave
+    ; enable the ERAM
+    ld a, $0A
+    ld [rRAMG], a
+
+    ; check the header
+    ld hl, _SRAM
+    ld a, [hli]
+    cp a, SAVE_HEADER_D
+    jr nz, .done
+    ld a, [hli]
+    cp a, SAVE_HEADER_M
+    jr nz, .done
+    ld a, [hli]
+    cp a, SAVE_HEADER_G
+    jr nz, .done
+
+    copy [WRAM_PLAYER_1_SCORE], [hli]
+    copy [WRAM_PLAYER_2_SCORE], [hli]
+    copy [WRAM_PLAYER_3_SCORE], [hli]
+    copy [WRAM_PLAYER_4_SCORE], [hl]
+
+    .done
+    ; disable the ERAM
+    ld a, $00
+    ld [rRAMG], a
+endm
+
+macro WriteSave
+    ; enable the ERAM
+    ld a, $0A
+    ld [rRAMG], a
+
+    ; write the header
+    ld hl, _SRAM
+    ld a, SAVE_HEADER_D
+    ld [hli], a
+    ld a, SAVE_HEADER_M
+    ld [hli], a
+    ld a, SAVE_HEADER_G
+    ld [hli], a
+    
+    copy [hli], [WRAM_PLAYER_1_SCORE]
+    copy [hli], [WRAM_PLAYER_2_SCORE]
+    copy [hli], [WRAM_PLAYER_3_SCORE]
+    copy [hl], [WRAM_PLAYER_4_SCORE]
+
+    ; disable the ERAM
+    ld a, $00
+    ld [rRAMG], a
+endm
+
+
 ; clear the OAM
 macro InitOAM
     ld c, OAM_COUNT
@@ -218,6 +275,9 @@ InitSample:
     copy [WRAM_PLAYER_2_SCORE], 0
     copy [WRAM_PLAYER_3_SCORE], 0
     copy [WRAM_PLAYER_4_SCORE], 0
+
+    ; Load the save file
+    LoadSave
 
     ; init the palette
     ld a, %11100100
@@ -330,7 +390,6 @@ UpdateSample:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UpdatePadInput WRAM_PAD_INPUT
 
-
     DrawActivePlayerArrow
     DrawScores
 
@@ -416,6 +475,11 @@ UpdateSample:
     ld [de], a
 .decrement_score_done
 
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_START
+    jr nz, .save_game_done
+    WriteSave
+.save_game_done
+
     ; Mark end of VBlank
     copy [WRAM_IS_VBLANK], 0
     ret
@@ -425,7 +489,7 @@ export InitSample, UpdateSample
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; AABBBCCCDDDEEEFFGGGHHHIIJKLLLMMMNNNNOOOPPPQRRRSSSSTTTTUUUVWWXYYZ
 ; Weighted alphabet to make more common letters appear more frequently
-section "game_tile_addresses", rom0[ALPHABET_MAP_START]
+section "game_tile_addresses", romx[ALPHABET_MAP_START], bank[1]
 dw CHAR_A_ADDR_OFFSET, CHAR_A_ADDR_OFFSET, CHAR_B_ADDR_OFFSET, CHAR_B_ADDR_OFFSET
 dw CHAR_B_ADDR_OFFSET, CHAR_C_ADDR_OFFSET, CHAR_C_ADDR_OFFSET, CHAR_C_ADDR_OFFSET
 dw CHAR_D_ADDR_OFFSET, CHAR_D_ADDR_OFFSET, CHAR_D_ADDR_OFFSET, CHAR_E_ADDR_OFFSET
@@ -443,7 +507,7 @@ dw CHAR_T_ADDR_OFFSET, CHAR_T_ADDR_OFFSET, CHAR_U_ADDR_OFFSET, CHAR_U_ADDR_OFFSE
 dw CHAR_U_ADDR_OFFSET, CHAR_V_ADDR_OFFSET, CHAR_W_ADDR_OFFSET, CHAR_W_ADDR_OFFSET
 dw CHAR_X_ADDR_OFFSET, CHAR_Y_ADDR_OFFSET, CHAR_Y_ADDR_OFFSET, CHAR_Z_ADDR_OFFSET
 
-section "game_tile_alphabet_data", rom0[TILE_ALPHABET_START]
+section "game_tile_alphabet_data", romx[TILE_ALPHABET_START], bank[1]
 incbin "assets/tile_alphabet/A.chr"
 incbin "assets/tile_alphabet/B.chr"
 incbin "assets/tile_alphabet/C.chr"
@@ -471,7 +535,7 @@ incbin "assets/tile_alphabet/X.chr"
 incbin "assets/tile_alphabet/Y.chr"
 incbin "assets/tile_alphabet/Z.chr"
 
-section "graphics_data", rom0[GRAPHICS_DATA_ADDRESS_START]
+section "graphics_data", romx[GRAPHICS_DATA_ADDRESS_START], bank[1]
 EmptyTile:
 dw $0000, $0000, $0000, $0000, $0000, $0000, $0000, $0000
 GameTile:
@@ -480,55 +544,55 @@ Font:
 incbin "assets/Font.chr"
 
 
-section "tilemaps_data", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 1 * SCRN_VX_B]
+section "tilemaps_data", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 1 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $01, $02, $02, $02, $03
 db $00, $00, $00, 00
 db $01, $02, $02, $02, $03
-section "tilemaps_data_row1", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 2 * SCRN_VX_B]
+section "tilemaps_data_row1", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 2 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row2", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 3 * SCRN_VX_B]
+section "tilemaps_data_row2", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 3 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row3", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 4 * SCRN_VX_B]
+section "tilemaps_data_row3", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 4 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row4", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 5 * SCRN_VX_B]
+section "tilemaps_data_row4", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 5 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row5", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 6 * SCRN_VX_B]
+section "tilemaps_data_row5", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 6 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row6", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 7 * SCRN_VX_B]
+section "tilemaps_data_row6", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 7 * SCRN_VX_B], bank[1]
 db $00, $00, $00
 db $04, $02, $02, $02, $05
 db $00, $00, $00, 00
 db $04, $02, $02, $02, $05
 
-section "tilemaps_data_row9", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 10 * SCRN_VX_B]
+section "tilemaps_data_row9", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 10 * SCRN_VX_B], bank[1]
 db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_FILLED_ARROW_OFFSET, FONT_SPACE_OFFSET
 db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 1
 db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
-section "tilemaps_data_row11", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 12 * SCRN_VX_B]
+section "tilemaps_data_row11", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 12 * SCRN_VX_B], bank[1]
 db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
 db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 2
 db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
-section "tilemaps_data_row13", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 14 * SCRN_VX_B]
+section "tilemaps_data_row13", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 14 * SCRN_VX_B], bank[1]
 db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
 db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 3
 db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
-section "tilemaps_data_row15", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 16 * SCRN_VX_B]
+section "tilemaps_data_row15", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 16 * SCRN_VX_B], bank[1]
 db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
 db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 4
 db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET

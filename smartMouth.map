@@ -1,5 +1,6 @@
 SUMMARY:
-	ROM0: 8719 bytes used / 24049 free
+	ROM0: 981 bytes used / 15403 free
+	ROMX: 7827 bytes used / 8557 free in 1 bank
 
 ROM0 bank #0:
 	SECTION: $0000-$0012 ($0013 bytes) ["main"]
@@ -13,45 +14,51 @@ ROM0 bank #0:
 	EMPTY: $0069-$00ff ($0097 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
-	SECTION: $0150-$0457 ($0308 bytes) ["sample"]
+	SECTION: $0150-$04b0 ($0361 bytes) ["sample"]
 	         $0150 = InitSample
-	         $01c1 = InitSample.init_oam_u1
-	         $01cd = InitSample.load_tile_u2
-	         $01e4 = InitSample.load_letter_copy_u3
-	         $01f9 = InitSample.load_letter_copy_u4
-	         $020d = InitSample.DrawTile0Line
-	         $0213 = InitSample.DrawTile0Chr
-	         $023e = InitSample.DrawTile1Line
-	         $0244 = InitSample.DrawTile1Chr
-	         $0270 = UpdateSample
-	         $0274 = UpdateSample.wait_vblank
-	         $02c8 = UpdateSample.player_1_arrow_done
-	         $02d1 = UpdateSample.player_2_arrow_done
-	         $02da = UpdateSample.player_3_arrow_done
-	         $02e3 = UpdateSample.player_4_arrow_done
-	         $02fa = UpdateSample.draw_double_digit_score_u5
-	         $02fc = UpdateSample.score_count_tens_u5
-	         $030d = UpdateSample.draw_score_done_u5
-	         $0322 = UpdateSample.draw_double_digit_score_u6
-	         $0324 = UpdateSample.score_count_tens_u6
-	         $0335 = UpdateSample.draw_score_done_u6
-	         $034a = UpdateSample.draw_double_digit_score_u7
-	         $034c = UpdateSample.score_count_tens_u7
-	         $035d = UpdateSample.draw_score_done_u7
-	         $0372 = UpdateSample.draw_double_digit_score_u8
-	         $0374 = UpdateSample.score_count_tens_u8
-	         $0385 = UpdateSample.draw_score_done_u8
-	         $03af = UpdateSample.load_letter_copy_u9
-	         $03d4 = UpdateSample.load_letter_copy_u10
-	         $03df = UpdateSample.display_new_letters_done
-	         $03f7 = UpdateSample.update_tile_0_done
-	         $03fb = UpdateSample.update_tile_1_done
-	         $0402 = UpdateSample.random_letter_done
-	         $0412 = UpdateSample.increment_arrow_done
-	         $0422 = UpdateSample.decrement_arrow_done
-	         $043a = UpdateSample.increment_score_done
-	         $0452 = UpdateSample.decrement_score_done
-	EMPTY: $0458-$497f ($4528 bytes)
+	         $01cc = InitSample.done
+	         $01ed = InitSample.init_oam_u1
+	         $01f9 = InitSample.load_tile_u2
+	         $0210 = InitSample.load_letter_copy_u3
+	         $0225 = InitSample.load_letter_copy_u4
+	         $0239 = InitSample.DrawTile0Line
+	         $023f = InitSample.DrawTile0Chr
+	         $026a = InitSample.DrawTile1Line
+	         $0270 = InitSample.DrawTile1Chr
+	         $029c = UpdateSample
+	         $02a0 = UpdateSample.wait_vblank
+	         $02f4 = UpdateSample.player_1_arrow_done
+	         $02fd = UpdateSample.player_2_arrow_done
+	         $0306 = UpdateSample.player_3_arrow_done
+	         $030f = UpdateSample.player_4_arrow_done
+	         $0326 = UpdateSample.draw_double_digit_score_u5
+	         $0328 = UpdateSample.score_count_tens_u5
+	         $0339 = UpdateSample.draw_score_done_u5
+	         $034e = UpdateSample.draw_double_digit_score_u6
+	         $0350 = UpdateSample.score_count_tens_u6
+	         $0361 = UpdateSample.draw_score_done_u6
+	         $0376 = UpdateSample.draw_double_digit_score_u7
+	         $0378 = UpdateSample.score_count_tens_u7
+	         $0389 = UpdateSample.draw_score_done_u7
+	         $039e = UpdateSample.draw_double_digit_score_u8
+	         $03a0 = UpdateSample.score_count_tens_u8
+	         $03b1 = UpdateSample.draw_score_done_u8
+	         $03db = UpdateSample.load_letter_copy_u9
+	         $0400 = UpdateSample.load_letter_copy_u10
+	         $040b = UpdateSample.display_new_letters_done
+	         $0423 = UpdateSample.update_tile_0_done
+	         $0427 = UpdateSample.update_tile_1_done
+	         $042e = UpdateSample.random_letter_done
+	         $043e = UpdateSample.increment_arrow_done
+	         $044e = UpdateSample.decrement_arrow_done
+	         $0466 = UpdateSample.increment_score_done
+	         $047e = UpdateSample.decrement_score_done
+	         $04ab = UpdateSample.save_game_done
+	EMPTY: $04b1-$3fff ($3b4f bytes)
+	TOTAL EMPTY: $3c2b bytes
+
+ROMX bank #1:
+	EMPTY: $4000-$497f ($0980 bytes)
 	SECTION: $4980-$49ff ($0080 bytes) ["game_tile_addresses"]
 	SECTION: $4a00-$63ff ($1a00 bytes) ["game_tile_alphabet_data"]
 	SECTION: $6400-$675f ($0360 bytes) ["graphics_data"]
@@ -81,4 +88,4 @@ ROM0 bank #0:
 	EMPTY: $7dcf-$7dff ($0031 bytes)
 	SECTION: $7e00-$7e0e ($000f bytes) ["tilemaps_data_row15"]
 	EMPTY: $7e0f-$7fff ($01f1 bytes)
-	TOTAL EMPTY: $5df1 bytes
+	TOTAL EMPTY: $216d bytes

@@ -8,9 +8,9 @@ rgbasm -Werror -Weverything -o main.o main.rgbasm
 [ $? -eq 0 ] || exit 1
 rgbasm -Werror -Weverything -o smartMouth.o smartMouth.rgbasm
 [ $? -eq 0 ] || exit 1
-rgblink --dmg --tiny --map $ROM_NAME.map --sym $ROM_NAME.sym -o $ROM_NAME.gb main.o smartMouth.o
+rgblink --dmg --map $ROM_NAME.map --sym $ROM_NAME.sym -o $ROM_NAME.gb main.o smartMouth.o
 [ $? -eq 0 ] || exit 1
-rgbfix --title game --pad-value 0 --validate $ROM_NAME.gb
+rgbfix --title game --mbc-type 0x1B --ram-size 0x03 --pad-value 0 --validate $ROM_NAME.gb
 [ $? -eq 0 ] || exit 1
 
 popd
