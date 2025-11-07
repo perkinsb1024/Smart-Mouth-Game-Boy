@@ -16,7 +16,7 @@ Phase 1
 Phase 2
 - Improve graphics (if needed)
 - Render four players ("Player 1" through "Player 4")
-- Use arrow keys to adjust score (left and right navigate between players, up and down adjust score)
+- Use arrow keys to adjust score (up and down navigate between players, left and right adjust score)
 - Start button saves game state (just score for now)
 - Load game state on game start
 

@@ -55,5 +55,12 @@ def CHAR_X_ADDR_OFFSET equ $1700
 def CHAR_Y_ADDR_OFFSET equ $1800
 def CHAR_Z_ADDR_OFFSET equ $1900
 
+def FONT_0_OFFSET       equ $06
+def FONT_A_OFFSET       equ $10
+def FONT_SPACE_OFFSET   equ $2A
+def FONT_COLON_OFFSET   equ $2D
+def FONT_HOLLOW_ARROW_OFFSET    equ $31
+def FONT_FILLED_ARROW_OFFSET    equ $32
+
 endc
 

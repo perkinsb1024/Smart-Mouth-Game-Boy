@@ -15,6 +15,9 @@ def TILE_ALPHABET_START             equ (GRAPHICS_DATA_ADDRESS_START - TILE_ALPH
 def ALPHABET_MAP_SIZE               equ (128)
 def ALPHABET_MAP_START              equ (TILE_ALPHABET_START - ALPHABET_MAP_SIZE)
 
+def INITIAL_ARROW_ADDRESS           equ (_SCRN0 + 10 * SCRN_VX_B + 2)
+def ARROW_ADDRESS_STEP              equ (SCRN_VX_B * 2)
+
 rsset _RAM
 
 def WRAM_IS_VBLANK                  rb 1
@@ -28,6 +31,11 @@ def WRAM_TILE_0_CHAR                rb 1
 def WRAM_TILE_1_CHAR                rb 1
 def WRAM_TILE_TO_UPDATE             rb 1
 def WRAM_TILE_INDEX                 rb 1
+def WRAM_PLAYER_ARROW_INDEX         rb 1
+def WRAM_PLAYER_1_SCORE             rb 1
+def WRAM_PLAYER_2_SCORE             rb 1
+def WRAM_PLAYER_3_SCORE             rb 1
+def WRAM_PLAYER_4_SCORE             rb 1
 
 def WRAM_END                        rb 0
 
@@ -80,6 +88,44 @@ macro LoadLetterFromMapIndex
     LoadLetterFromAddressOffset \1, de
 endm
 
+macro DrawActivePlayerArrow
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ld b, 0
+    ld h, high(INITIAL_ARROW_ADDRESS)
+    ld l, low(INITIAL_ARROW_ADDRESS)
+    ld d, 0
+    ld e, ARROW_ADDRESS_STEP
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_1_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_1_arrow_done
+    add hl, de
+    inc b
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_2_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_2_arrow_done
+    add hl, de
+    inc b
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_3_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_3_arrow_done
+    add hl, de
+    inc b
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_4_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_4_arrow_done
+    add hl, de
+    inc b
+
+endm
+
 ; clear the OAM
 macro InitOAM
     ld c, OAM_COUNT
@@ -115,6 +161,11 @@ InitSample:
     copy [WRAM_TILE_1_CHAR], CHAR_A
     copy [WRAM_TILE_TO_UPDATE], 0
     copy [WRAM_TILE_INDEX], 1
+    copy [WRAM_PLAYER_ARROW_INDEX], 0
+    copy [WRAM_PLAYER_1_SCORE], 0
+    copy [WRAM_PLAYER_2_SCORE], 0
+    copy [WRAM_PLAYER_3_SCORE], 0
+    copy [WRAM_PLAYER_4_SCORE], 0
 
     ; init the palette
     ld a, %11100100
@@ -226,6 +277,25 @@ UpdateSample:
     ; vblank
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UpdatePadInput WRAM_PAD_INPUT
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_DOWN
+    jr nz, .increment_arrow_done
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    inc a
+    and a, %00000011
+    ld [WRAM_PLAYER_ARROW_INDEX], a
+.increment_arrow_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_UP
+    jr nz, .decrement_arrow_done
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    dec a
+    and a, %00000011
+    ld [WRAM_PLAYER_ARROW_INDEX], a
+.decrement_arrow_done
+
+    DrawActivePlayerArrow
+
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
     jr nz, .display_new_letters_done
         xor a
@@ -241,6 +311,7 @@ UpdateSample:
 
     ld a, [rDIV]
     and a, %00111111
+    ld b, b
     ld b, a
     ld a, [WRAM_TILE_TO_UPDATE]
     cp a, 0
@@ -323,39 +394,55 @@ Font:
 incbin "assets/Font.chr"
 
 
-section "tilemaps_data", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 1 * 32]
+section "tilemaps_data", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 1 * SCRN_VX_B]
 db $00, $00, $00
 db $01, $02, $02, $02, $03
 db $00, $00, $00, 00
 db $01, $02, $02, $02, $03
-section "tilemaps_data_row1", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 2 * 32]
+section "tilemaps_data_row1", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 2 * SCRN_VX_B]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row2", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 3 * 32]
+section "tilemaps_data_row2", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 3 * SCRN_VX_B]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row3", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 4 * 32]
+section "tilemaps_data_row3", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 4 * SCRN_VX_B]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row4", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 5 * 32]
+section "tilemaps_data_row4", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 5 * SCRN_VX_B]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row5", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 6 * 32]
+section "tilemaps_data_row5", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 6 * SCRN_VX_B]
 db $00, $00, $00
 db $02, $02, $02, $02, $02
 db $00, $00, $00, 00
 db $02, $02, $02, $02, $02
-section "tilemaps_data_row6", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 7 * 32]
+section "tilemaps_data_row6", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 7 * SCRN_VX_B]
 db $00, $00, $00
 db $04, $02, $02, $02, $05
 db $00, $00, $00, 00
 db $04, $02, $02, $02, $05
 
+section "tilemaps_data_row9", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 10 * SCRN_VX_B]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_FILLED_ARROW_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 1
+db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
+section "tilemaps_data_row11", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 12 * SCRN_VX_B]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 2
+db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
+section "tilemaps_data_row13", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 14 * SCRN_VX_B]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 3
+db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
+section "tilemaps_data_row15", rom0[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + 16 * SCRN_VX_B]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 4
+db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET

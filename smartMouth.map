@@ -1,5 +1,5 @@
 SUMMARY:
-	ROM0: 8837 bytes used / 23931 free
+	ROM0: 8492 bytes used / 24276 free
 
 ROM0 bank #0:
 	SECTION: $0000-$0012 ($0013 bytes) ["main"]
@@ -11,32 +11,38 @@ ROM0 bank #0:
 	EMPTY: $0048-$00ff ($00b8 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
-	SECTION: $0150-$0312 ($01c3 bytes) ["sample"]
+	SECTION: $0150-$037d ($022e bytes) ["sample"]
 	         $0150 = InitSample
-	         $01a2 = InitSample.init_oam_u1
-	         $01ae = InitSample.load_tile_u2
-	         $01c5 = InitSample.load_letter_copy_u3
-	         $01da = InitSample.load_letter_copy_u4
-	         $01ee = InitSample.DrawTile0Line
-	         $01f4 = InitSample.DrawTile0Chr
-	         $021f = InitSample.DrawTile1Line
-	         $0225 = InitSample.DrawTile1Chr
-	         $0251 = UpdateSample
-	         $0255 = UpdateSample.wait_vblank
-	         $02bf = UpdateSample.load_letter_copy_u5
-	         $02e4 = UpdateSample.load_letter_copy_u6
-	         $02ef = UpdateSample.display_new_letters_done
-	         $0302 = UpdateSample.update_tile_0_done
-	         $0306 = UpdateSample.update_tile_1_done
-	         $030d = UpdateSample.random_letter_done
-	EMPTY: $0313-$497f ($466d bytes)
+	         $01bb = InitSample.init_oam_u1
+	         $01c7 = InitSample.load_tile_u2
+	         $01de = InitSample.load_letter_copy_u3
+	         $01f3 = InitSample.load_letter_copy_u4
+	         $0207 = InitSample.DrawTile0Line
+	         $020d = InitSample.DrawTile0Chr
+	         $0238 = InitSample.DrawTile1Line
+	         $023e = InitSample.DrawTile1Chr
+	         $026a = UpdateSample
+	         $026e = UpdateSample.wait_vblank
+	         $02be = UpdateSample.increment_arrow_done
+	         $02ce = UpdateSample.decrement_arrow_done
+	         $02e2 = UpdateSample.player_1_arrow_done
+	         $02eb = UpdateSample.player_2_arrow_done
+	         $02f4 = UpdateSample.player_3_arrow_done
+	         $02fd = UpdateSample.player_4_arrow_done
+	         $0329 = UpdateSample.load_letter_copy_u5
+	         $034e = UpdateSample.load_letter_copy_u6
+	         $0359 = UpdateSample.display_new_letters_done
+	         $036d = UpdateSample.update_tile_0_done
+	         $0371 = UpdateSample.update_tile_1_done
+	         $0378 = UpdateSample.random_letter_done
+	EMPTY: $037e-$497f ($4602 bytes)
 	SECTION: $4980-$49ff ($0080 bytes) ["game_tile_addresses"]
 	SECTION: $4a00-$63ff ($1a00 bytes) ["game_tile_alphabet_data"]
-	SECTION: $6400-$695f ($0560 bytes) ["graphics_data"]
+	SECTION: $6400-$675f ($0360 bytes) ["graphics_data"]
 	         $6400 = EmptyTile
 	         $6410 = GameTile
 	         $6460 = Font
-	EMPTY: $6960-$7c1f ($12c0 bytes)
+	EMPTY: $6760-$7c1f ($14c0 bytes)
 	SECTION: $7c20-$7c30 ($0011 bytes) ["tilemaps_data"]
 	EMPTY: $7c31-$7c3f ($000f bytes)
 	SECTION: $7c40-$7c50 ($0011 bytes) ["tilemaps_data_row1"]
@@ -50,5 +56,13 @@ ROM0 bank #0:
 	SECTION: $7cc0-$7cd0 ($0011 bytes) ["tilemaps_data_row5"]
 	EMPTY: $7cd1-$7cdf ($000f bytes)
 	SECTION: $7ce0-$7cf0 ($0011 bytes) ["tilemaps_data_row6"]
-	EMPTY: $7cf1-$7fff ($030f bytes)
-	TOTAL EMPTY: $5d7b bytes
+	EMPTY: $7cf1-$7d3f ($004f bytes)
+	SECTION: $7d40-$7d4e ($000f bytes) ["tilemaps_data_row9"]
+	EMPTY: $7d4f-$7d7f ($0031 bytes)
+	SECTION: $7d80-$7d8e ($000f bytes) ["tilemaps_data_row11"]
+	EMPTY: $7d8f-$7dbf ($0031 bytes)
+	SECTION: $7dc0-$7dce ($000f bytes) ["tilemaps_data_row13"]
+	EMPTY: $7dcf-$7dff ($0031 bytes)
+	SECTION: $7e00-$7e0e ($000f bytes) ["tilemaps_data_row15"]
+	EMPTY: $7e0f-$7fff ($01f1 bytes)
+	TOTAL EMPTY: $5ed4 bytes
