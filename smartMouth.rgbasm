@@ -32,6 +32,7 @@ def WRAM_TILE_0_X                   rb 1
 def WRAM_TILE_0_Y                   rb 1
 def WRAM_TILE_1_X                   rb 1
 def WRAM_TILE_1_Y                   rb 1
+def WRAM_RANDOM_SALT                rb 1
 def WRAM_TILE_0_CHAR                rb 1
 def WRAM_TILE_1_CHAR                rb 1
 def WRAM_TILE_TO_UPDATE             rb 1
@@ -190,6 +191,12 @@ section "vblank_interrupt", rom0[$0040]
     pop af
     reti
 
+section "joypad_interrupt", rom0[$0060]
+    push af
+    copy [WRAM_RANDOM_SALT], [rDIV]
+    pop af
+    reti
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 section "sample", rom0
@@ -201,6 +208,7 @@ InitSample:
     copy [WRAM_TILE_0_Y], 36
     copy [WRAM_TILE_1_X], 36 + 8 * 9
     copy [WRAM_TILE_1_Y], 36
+    copy [WRAM_RANDOM_SALT], [rDIV]
     copy [WRAM_TILE_0_CHAR], CHAR_A
     copy [WRAM_TILE_1_CHAR], CHAR_A
     copy [WRAM_TILE_TO_UPDATE], 0
@@ -302,7 +310,7 @@ InitSample:
     ld [rLCDC], a
 
     ; enable interrupts
-    ld a, IEF_VBLANK
+    ld a, IEF_VBLANK | IEF_HILO
     ld [rIE], a
     ei
 
@@ -340,6 +348,9 @@ UpdateSample:
     .display_new_letters_done
 
     ld a, [rDIV]
+    ld b, a
+    ld a, [WRAM_RANDOM_SALT]
+    xor a, b
     and a, %00111111
     ld b, a
     ld a, [WRAM_TILE_TO_UPDATE]
