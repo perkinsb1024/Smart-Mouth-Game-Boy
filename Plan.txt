@@ -21,17 +21,17 @@ Phase 2
 - Load game state on game start
 
 Phase 3
-- Game Tile flip animation
-- Countdown timer
-- Add Game Boy Color support
 - Add Menu
     - Save Game
     - Reset Scores
-
-Phase 4
 - Update menu to include "Edit Player Names"
 - Build edit player name interface
 - Add player names to save / load
+
+Phase 4
+- Game Tile flip animation
+- Countdown timer
+- Add Game Boy Color support
 
 Out of Scope
 - Having a dictionary

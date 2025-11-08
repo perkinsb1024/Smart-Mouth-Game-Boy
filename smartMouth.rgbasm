@@ -7,7 +7,7 @@ def TILES_COUNT                     equ (384)
 def BYTES_PER_TILE                  equ (16)
 def TILES_BYTE_SIZE                 equ (TILES_COUNT * BYTES_PER_TILE)
 def TILEMAP_BYTE_SIZE               equ (1024)
-def GRAPHICS_DATA_SIZE              equ (TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE)
+def GRAPHICS_DATA_SIZE              equ (TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE + TILEMAP_BYTE_SIZE)
 def GRAPHICS_DATA_ADDRESS_END       equ ($8000)
 def GRAPHICS_DATA_ADDRESS_START     equ (GRAPHICS_DATA_ADDRESS_END - GRAPHICS_DATA_SIZE)
 def TILE_ALPHABET_SIZE              equ (16 * 16 * 26)
@@ -15,23 +15,39 @@ def TILE_ALPHABET_START             equ (GRAPHICS_DATA_ADDRESS_START - TILE_ALPH
 def ALPHABET_MAP_SIZE               equ (128)
 def ALPHABET_MAP_START              equ (TILE_ALPHABET_START - ALPHABET_MAP_SIZE)
 
-def INITIAL_ARROW_ADDRESS           equ (_SCRN0 + 10 * SCRN_VX_B + 2)
+def INITIAL_PLAYER_ARROW_ADDRESS    equ (_SCRN0 + 10 * SCRN_VX_B + 2)
 def ARROW_ADDRESS_STEP              equ (SCRN_VX_B * 2)
 def SCORE_ADDRESS_STEP              equ (ARROW_ADDRESS_STEP)
-def PLAYER_1_SCORE_ADDRESS          equ (INITIAL_ARROW_ADDRESS + 12)
+def PLAYER_1_SCORE_ADDRESS          equ (INITIAL_PLAYER_ARROW_ADDRESS + 12)
 def PLAYER_2_SCORE_ADDRESS          equ (PLAYER_1_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
 def PLAYER_3_SCORE_ADDRESS          equ (PLAYER_2_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
 def PLAYER_4_SCORE_ADDRESS          equ (PLAYER_3_SCORE_ADDRESS + SCORE_ADDRESS_STEP)
 
+def INITIAL_MENU_ARROW_ADDRESS      equ (_SCRN1 + 2)
+
 def SAVE_HEADER_D                   equ $44
 def SAVE_HEADER_M                   equ $4D
 def SAVE_HEADER_G                   equ $47
+
+def WINDOW_X                        equ 7
+def WINDOW_Y                        equ 80
+def WINDOW_HIDDEN_Y                 equ 145
+
+def MODE_GAMEPLAY                   equ 0
+def MODE_MENU                       equ 1
+def MODE_EDIT_NAMES                 equ 2
+
+def MENU_SAVE_GAME                  equ 0
+def MENU_RESET_SCORES               equ 1
+def MENU_EDIT_NAMES                 equ 2
+def MENU_EXIT_MENU                  equ 3
 
 rsset _RAM
 
 def WRAM_IS_VBLANK                  rb 1
 def WRAM_PAD_INPUT                  rb sizeof_PAD_INPUT
 
+def WRAM_MODE                       rb 2
 def WRAM_TILE_0_X                   rb 1
 def WRAM_TILE_0_Y                   rb 1
 def WRAM_TILE_1_X                   rb 1
@@ -46,6 +62,7 @@ def WRAM_PLAYER_1_SCORE             rb 1
 def WRAM_PLAYER_2_SCORE             rb 1
 def WRAM_PLAYER_3_SCORE             rb 1
 def WRAM_PLAYER_4_SCORE             rb 1
+def WRAM_MENU_ARROW_INDEX           rb 1
 
 def WRAM_END                        rb 0
 
@@ -96,43 +113,6 @@ macro LoadLetterFromMapIndex
     inc hl
     copy d, [hl]
     LoadLetterFromAddressOffset \1, de
-endm
-
-macro DrawActivePlayerArrow
-    ld a, [WRAM_PLAYER_ARROW_INDEX]
-    ld b, 0
-    ld h, high(INITIAL_ARROW_ADDRESS)
-    ld l, low(INITIAL_ARROW_ADDRESS)
-    ld d, 0
-    ld e, ARROW_ADDRESS_STEP
-    ld [hl], FONT_SPACE_OFFSET
-    cp a, b
-    jr nz, .player_1_arrow_done
-    ld [hl], FONT_FILLED_ARROW_OFFSET
-.player_1_arrow_done
-    add hl, de
-    inc b
-    ld [hl], FONT_SPACE_OFFSET
-    cp a, b
-    jr nz, .player_2_arrow_done
-    ld [hl], FONT_FILLED_ARROW_OFFSET
-.player_2_arrow_done
-    add hl, de
-    inc b
-    ld [hl], FONT_SPACE_OFFSET
-    cp a, b
-    jr nz, .player_3_arrow_done
-    ld [hl], FONT_FILLED_ARROW_OFFSET
-.player_3_arrow_done
-    add hl, de
-    inc b
-    ld [hl], FONT_SPACE_OFFSET
-    cp a, b
-    jr nz, .player_4_arrow_done
-    ld [hl], FONT_FILLED_ARROW_OFFSET
-.player_4_arrow_done
-    add hl, de
-    inc b
 endm
 
 macro DrawScore
@@ -256,11 +236,12 @@ section "joypad_interrupt", rom0[$0060]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-section "sample", rom0
+section "SmartMouth", rom0
 
 InitSample:
     ; Set WRAM variables
     InitPadInput WRAM_PAD_INPUT
+    copy [WRAM_MODE], MODE_GAMEPLAY
     copy [WRAM_TILE_0_X], 36
     copy [WRAM_TILE_0_Y], 36
     copy [WRAM_TILE_1_X], 36 + 8 * 9
@@ -275,6 +256,7 @@ InitSample:
     copy [WRAM_PLAYER_2_SCORE], 0
     copy [WRAM_PLAYER_3_SCORE], 0
     copy [WRAM_PLAYER_4_SCORE], 0
+    copy [WRAM_MENU_ARROW_INDEX], 0
 
     ; Load the save file
     LoadSave
@@ -290,6 +272,8 @@ InitSample:
     xor a
     ld [rSCX], a
     ld [rSCY], a
+    copy [rWX], WINDOW_X
+    copy [rWY], WINDOW_HIDDEN_Y
 
     ; Init Graphics
     InitOAM
@@ -366,7 +350,7 @@ InitSample:
     jr nz, .DrawTile1Line
 
     ; set the graphics parameters and turn back LCD on
-    ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
+    ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON | LCDCF_WINON
     ld [rLCDC], a
 
     ; enable interrupts
@@ -390,7 +374,63 @@ UpdateSample:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     UpdatePadInput WRAM_PAD_INPUT
 
-    DrawActivePlayerArrow
+    ld a, [WRAM_MODE]
+    cp a, MODE_GAMEPLAY
+    jr nz, .game_mode_done
+    call GameplayLogic
+.game_mode_done
+    cp a, MODE_MENU
+    jr nz, .menu_mode_done
+    call MenuMode
+.menu_mode_done
+
+    ; Mark end of VBlank
+    copy [WRAM_IS_VBLANK], 0
+    ret
+
+export InitSample, UpdateSample
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DrawActiveArrow:
+    ld a, [de]
+    ld b, 0
+    ld d, 0
+    ld e, ARROW_ADDRESS_STEP
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_1_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_1_arrow_done
+    add hl, de
+    inc b
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_2_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_2_arrow_done
+    add hl, de
+    inc b
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_3_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_3_arrow_done
+    add hl, de
+    inc b
+    ld [hl], FONT_SPACE_OFFSET
+    cp a, b
+    jr nz, .player_4_arrow_done
+    ld [hl], FONT_FILLED_ARROW_OFFSET
+.player_4_arrow_done
+    ret
+
+GameplayLogic:
+    ld d, high(WRAM_PLAYER_ARROW_INDEX)
+    ld e, low(WRAM_PLAYER_ARROW_INDEX)
+    ld h, high(INITIAL_PLAYER_ARROW_ADDRESS)
+    ld l, low(INITIAL_PLAYER_ARROW_ADDRESS)
+    call DrawActiveArrow
     DrawScores
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
@@ -402,7 +442,7 @@ UpdateSample:
         LoadLetterFromMapIndex 0, a
         ld a, [WRAM_TILE_1_CHAR]
         LoadLetterFromMapIndex 1, a
-        ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON
+        ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON | LCDCF_WINON
         ld [rLCDC], a
     .display_new_letters_done
 
@@ -476,15 +516,66 @@ UpdateSample:
 .decrement_score_done
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_START
-    jr nz, .save_game_done
-    WriteSave
-.save_game_done
-
-    ; Mark end of VBlank
-    copy [WRAM_IS_VBLANK], 0
+    jr nz, .show_menu_done
+    copy [rWY], WINDOW_Y
+    copy [WRAM_MODE], MODE_MENU
+    copy [WRAM_MENU_ARROW_INDEX], MENU_EXIT_MENU
+.show_menu_done
     ret
 
-export InitSample, UpdateSample
+MenuMode:
+    ld d, high(WRAM_MENU_ARROW_INDEX)
+    ld e, low(WRAM_MENU_ARROW_INDEX)
+    ld h, high(INITIAL_MENU_ARROW_ADDRESS)
+    ld l, low(INITIAL_MENU_ARROW_ADDRESS)
+    call DrawActiveArrow
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
+    jr nz, .menu_item_selected_done
+    ; Menu item selected
+    ld a, [WRAM_MENU_ARROW_INDEX]
+    cp a, MENU_SAVE_GAME
+    jr nz, .save_game_done
+    WriteSave
+    jp .hide_menu
+.save_game_done
+    ld a, [WRAM_MENU_ARROW_INDEX]
+    cp a, MENU_RESET_SCORES
+    jr nz, .reset_scores_done
+    copy [WRAM_PLAYER_1_SCORE], 0
+    copy [WRAM_PLAYER_2_SCORE], 0
+    copy [WRAM_PLAYER_3_SCORE], 0
+    copy [WRAM_PLAYER_4_SCORE], 0
+    jp .hide_menu
+.reset_scores_done
+    ld a, [WRAM_MENU_ARROW_INDEX]
+    cp a, MENU_EXIT_MENU
+    jr z, .hide_menu
+.menu_item_selected_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_DOWN
+    jr nz, .increment_arrow_done
+    ld a, [WRAM_MENU_ARROW_INDEX]
+    inc a
+    and a, %00000011
+    ld [WRAM_MENU_ARROW_INDEX], a
+.increment_arrow_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_UP
+    jr nz, .decrement_arrow_done
+    ld a, [WRAM_MENU_ARROW_INDEX]
+    dec a
+    and a, %00000011
+    ld [WRAM_MENU_ARROW_INDEX], a
+.decrement_arrow_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_START
+    jr nz, .hide_menu_done
+.hide_menu
+    copy [rWY], WINDOW_HIDDEN_Y
+    copy [WRAM_MODE], MODE_GAMEPLAY
+.hide_menu_done
+    ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; AABBBCCCDDDEEEFFGGGHHHIIJKLLLMMMNNNNOOOPPPQRRRSSSSTTTTUUUVWWXYYZ
@@ -596,3 +687,17 @@ section "tilemaps_data_row15", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZ
 db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
 db FONT_A_OFFSET + CHAR_P, FONT_A_OFFSET + CHAR_L, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_Y, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_R, FONT_SPACE_OFFSET, FONT_0_OFFSET + 4
 db FONT_COLON_OFFSET, FONT_SPACE_OFFSET, FONT_0_OFFSET
+
+
+section "tilemaps_1_data_row0", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE], bank[1]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_FILLED_ARROW_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_S, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_V, FONT_A_OFFSET + CHAR_E, FONT_SPACE_OFFSET, FONT_A_OFFSET + CHAR_G, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_M, FONT_A_OFFSET + CHAR_E
+section "tilemaps_1_data_row2", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE + 2 * SCRN_VX_B], bank[1]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_R, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_S, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_T, FONT_SPACE_OFFSET, FONT_A_OFFSET + CHAR_S, FONT_A_OFFSET + CHAR_C, FONT_A_OFFSET + CHAR_O, FONT_A_OFFSET + CHAR_R, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_S
+section "tilemaps_1_data_row4", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE + 4 * SCRN_VX_B], bank[1]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_D, FONT_A_OFFSET + CHAR_I, FONT_A_OFFSET + CHAR_T, FONT_SPACE_OFFSET, FONT_A_OFFSET + CHAR_N, FONT_A_OFFSET + CHAR_A, FONT_A_OFFSET + CHAR_M, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_S
+section "tilemaps_1_data_row6", romx[GRAPHICS_DATA_ADDRESS_START + TILES_BYTE_SIZE + TILEMAP_BYTE_SIZE + 6 * SCRN_VX_B], bank[1]
+db FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET, FONT_SPACE_OFFSET
+db FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_X, FONT_A_OFFSET + CHAR_I, FONT_A_OFFSET + CHAR_T, FONT_SPACE_OFFSET, FONT_A_OFFSET + CHAR_M, FONT_A_OFFSET + CHAR_E, FONT_A_OFFSET + CHAR_N, FONT_A_OFFSET + CHAR_U

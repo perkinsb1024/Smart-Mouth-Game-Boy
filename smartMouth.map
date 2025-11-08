@@ -1,6 +1,6 @@
 SUMMARY:
-	ROM0: 981 bytes used / 15403 free
-	ROMX: 7827 bytes used / 8557 free in 1 bank
+	ROM0: 1153 bytes used / 15231 free
+	ROMX: 7883 bytes used / 8501 free in 1 bank
 
 ROM0 bank #0:
 	SECTION: $0000-$0012 ($0013 bytes) ["main"]
@@ -14,78 +14,98 @@ ROM0 bank #0:
 	EMPTY: $0069-$00ff ($0097 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
-	SECTION: $0150-$04b0 ($0361 bytes) ["sample"]
+	SECTION: $0150-$055c ($040d bytes) ["SmartMouth"]
 	         $0150 = InitSample
-	         $01cc = InitSample.done
-	         $01ed = InitSample.init_oam_u1
-	         $01f9 = InitSample.load_tile_u2
-	         $0210 = InitSample.load_letter_copy_u3
-	         $0225 = InitSample.load_letter_copy_u4
-	         $0239 = InitSample.DrawTile0Line
-	         $023f = InitSample.DrawTile0Chr
-	         $026a = InitSample.DrawTile1Line
-	         $0270 = InitSample.DrawTile1Chr
-	         $029c = UpdateSample
-	         $02a0 = UpdateSample.wait_vblank
-	         $02f4 = UpdateSample.player_1_arrow_done
-	         $02fd = UpdateSample.player_2_arrow_done
-	         $0306 = UpdateSample.player_3_arrow_done
-	         $030f = UpdateSample.player_4_arrow_done
-	         $0326 = UpdateSample.draw_double_digit_score_u5
-	         $0328 = UpdateSample.score_count_tens_u5
-	         $0339 = UpdateSample.draw_score_done_u5
-	         $034e = UpdateSample.draw_double_digit_score_u6
-	         $0350 = UpdateSample.score_count_tens_u6
-	         $0361 = UpdateSample.draw_score_done_u6
-	         $0376 = UpdateSample.draw_double_digit_score_u7
-	         $0378 = UpdateSample.score_count_tens_u7
-	         $0389 = UpdateSample.draw_score_done_u7
-	         $039e = UpdateSample.draw_double_digit_score_u8
-	         $03a0 = UpdateSample.score_count_tens_u8
-	         $03b1 = UpdateSample.draw_score_done_u8
-	         $03db = UpdateSample.load_letter_copy_u9
-	         $0400 = UpdateSample.load_letter_copy_u10
-	         $040b = UpdateSample.display_new_letters_done
-	         $0423 = UpdateSample.update_tile_0_done
-	         $0427 = UpdateSample.update_tile_1_done
-	         $042e = UpdateSample.random_letter_done
-	         $043e = UpdateSample.increment_arrow_done
-	         $044e = UpdateSample.decrement_arrow_done
-	         $0466 = UpdateSample.increment_score_done
-	         $047e = UpdateSample.decrement_score_done
-	         $04ab = UpdateSample.save_game_done
-	EMPTY: $04b1-$3fff ($3b4f bytes)
-	TOTAL EMPTY: $3c2b bytes
+	         $01d6 = InitSample.done
+	         $0201 = InitSample.init_oam_u1
+	         $020d = InitSample.load_tile_u2
+	         $0224 = InitSample.load_letter_copy_u3
+	         $0239 = InitSample.load_letter_copy_u4
+	         $024d = InitSample.DrawTile0Line
+	         $0253 = InitSample.DrawTile0Chr
+	         $027e = InitSample.DrawTile1Line
+	         $0284 = InitSample.DrawTile1Chr
+	         $02b0 = UpdateSample
+	         $02b4 = UpdateSample.wait_vblank
+	         $02fe = UpdateSample.game_mode_done
+	         $0305 = UpdateSample.menu_mode_done
+	         $030b = DrawActiveArrow
+	         $0319 = DrawActiveArrow.player_1_arrow_done
+	         $0322 = DrawActiveArrow.player_2_arrow_done
+	         $032b = DrawActiveArrow.player_3_arrow_done
+	         $0334 = DrawActiveArrow.player_4_arrow_done
+	         $0335 = GameplayLogic
+	         $0355 = GameplayLogic.draw_double_digit_score_u5
+	         $0357 = GameplayLogic.score_count_tens_u5
+	         $0368 = GameplayLogic.draw_score_done_u5
+	         $037d = GameplayLogic.draw_double_digit_score_u6
+	         $037f = GameplayLogic.score_count_tens_u6
+	         $0390 = GameplayLogic.draw_score_done_u6
+	         $03a5 = GameplayLogic.draw_double_digit_score_u7
+	         $03a7 = GameplayLogic.score_count_tens_u7
+	         $03b8 = GameplayLogic.draw_score_done_u7
+	         $03cd = GameplayLogic.draw_double_digit_score_u8
+	         $03cf = GameplayLogic.score_count_tens_u8
+	         $03e0 = GameplayLogic.draw_score_done_u8
+	         $040a = GameplayLogic.load_letter_copy_u9
+	         $042f = GameplayLogic.load_letter_copy_u10
+	         $043a = GameplayLogic.display_new_letters_done
+	         $0452 = GameplayLogic.update_tile_0_done
+	         $0456 = GameplayLogic.update_tile_1_done
+	         $045d = GameplayLogic.random_letter_done
+	         $046d = GameplayLogic.increment_arrow_done
+	         $047d = GameplayLogic.decrement_arrow_done
+	         $0495 = GameplayLogic.increment_score_done
+	         $04ad = GameplayLogic.decrement_score_done
+	         $04c3 = GameplayLogic.show_menu_done
+	         $04c4 = MenuMode
+	         $0506 = MenuMode.save_game_done
+	         $0524 = MenuMode.reset_scores_done
+	         $052b = MenuMode.menu_item_selected_done
+	         $053b = MenuMode.increment_arrow_done
+	         $054b = MenuMode.decrement_arrow_done
+	         $0552 = MenuMode.hide_menu
+	         $055c = MenuMode.hide_menu_done
+	EMPTY: $055d-$3fff ($3aa3 bytes)
+	TOTAL EMPTY: $3b7f bytes
 
 ROMX bank #1:
-	EMPTY: $4000-$497f ($0980 bytes)
-	SECTION: $4980-$49ff ($0080 bytes) ["game_tile_addresses"]
-	SECTION: $4a00-$63ff ($1a00 bytes) ["game_tile_alphabet_data"]
-	SECTION: $6400-$675f ($0360 bytes) ["graphics_data"]
-	         $6400 = EmptyTile
-	         $6410 = GameTile
-	         $6460 = Font
-	EMPTY: $6760-$7c1f ($14c0 bytes)
-	SECTION: $7c20-$7c30 ($0011 bytes) ["tilemaps_data"]
-	EMPTY: $7c31-$7c3f ($000f bytes)
-	SECTION: $7c40-$7c50 ($0011 bytes) ["tilemaps_data_row1"]
-	EMPTY: $7c51-$7c5f ($000f bytes)
-	SECTION: $7c60-$7c70 ($0011 bytes) ["tilemaps_data_row2"]
-	EMPTY: $7c71-$7c7f ($000f bytes)
-	SECTION: $7c80-$7c90 ($0011 bytes) ["tilemaps_data_row3"]
-	EMPTY: $7c91-$7c9f ($000f bytes)
-	SECTION: $7ca0-$7cb0 ($0011 bytes) ["tilemaps_data_row4"]
-	EMPTY: $7cb1-$7cbf ($000f bytes)
-	SECTION: $7cc0-$7cd0 ($0011 bytes) ["tilemaps_data_row5"]
-	EMPTY: $7cd1-$7cdf ($000f bytes)
-	SECTION: $7ce0-$7cf0 ($0011 bytes) ["tilemaps_data_row6"]
-	EMPTY: $7cf1-$7d3f ($004f bytes)
-	SECTION: $7d40-$7d4e ($000f bytes) ["tilemaps_data_row9"]
-	EMPTY: $7d4f-$7d7f ($0031 bytes)
-	SECTION: $7d80-$7d8e ($000f bytes) ["tilemaps_data_row11"]
-	EMPTY: $7d8f-$7dbf ($0031 bytes)
-	SECTION: $7dc0-$7dce ($000f bytes) ["tilemaps_data_row13"]
-	EMPTY: $7dcf-$7dff ($0031 bytes)
-	SECTION: $7e00-$7e0e ($000f bytes) ["tilemaps_data_row15"]
-	EMPTY: $7e0f-$7fff ($01f1 bytes)
-	TOTAL EMPTY: $216d bytes
+	EMPTY: $4000-$457f ($0580 bytes)
+	SECTION: $4580-$45ff ($0080 bytes) ["game_tile_addresses"]
+	SECTION: $4600-$5fff ($1a00 bytes) ["game_tile_alphabet_data"]
+	SECTION: $6000-$635f ($0360 bytes) ["graphics_data"]
+	         $6000 = EmptyTile
+	         $6010 = GameTile
+	         $6060 = Font
+	EMPTY: $6360-$781f ($14c0 bytes)
+	SECTION: $7820-$7830 ($0011 bytes) ["tilemaps_data"]
+	EMPTY: $7831-$783f ($000f bytes)
+	SECTION: $7840-$7850 ($0011 bytes) ["tilemaps_data_row1"]
+	EMPTY: $7851-$785f ($000f bytes)
+	SECTION: $7860-$7870 ($0011 bytes) ["tilemaps_data_row2"]
+	EMPTY: $7871-$787f ($000f bytes)
+	SECTION: $7880-$7890 ($0011 bytes) ["tilemaps_data_row3"]
+	EMPTY: $7891-$789f ($000f bytes)
+	SECTION: $78a0-$78b0 ($0011 bytes) ["tilemaps_data_row4"]
+	EMPTY: $78b1-$78bf ($000f bytes)
+	SECTION: $78c0-$78d0 ($0011 bytes) ["tilemaps_data_row5"]
+	EMPTY: $78d1-$78df ($000f bytes)
+	SECTION: $78e0-$78f0 ($0011 bytes) ["tilemaps_data_row6"]
+	EMPTY: $78f1-$793f ($004f bytes)
+	SECTION: $7940-$794e ($000f bytes) ["tilemaps_data_row9"]
+	EMPTY: $794f-$797f ($0031 bytes)
+	SECTION: $7980-$798e ($000f bytes) ["tilemaps_data_row11"]
+	EMPTY: $798f-$79bf ($0031 bytes)
+	SECTION: $79c0-$79ce ($000f bytes) ["tilemaps_data_row13"]
+	EMPTY: $79cf-$79ff ($0031 bytes)
+	SECTION: $7a00-$7a0e ($000f bytes) ["tilemaps_data_row15"]
+	EMPTY: $7a0f-$7bff ($01f1 bytes)
+	SECTION: $7c00-$7c0c ($000d bytes) ["tilemaps_1_data_row0"]
+	EMPTY: $7c0d-$7c3f ($0033 bytes)
+	SECTION: $7c40-$7c4f ($0010 bytes) ["tilemaps_1_data_row2"]
+	EMPTY: $7c50-$7c7f ($0030 bytes)
+	SECTION: $7c80-$7c8d ($000e bytes) ["tilemaps_1_data_row4"]
+	EMPTY: $7c8e-$7cbf ($0032 bytes)
+	SECTION: $7cc0-$7ccc ($000d bytes) ["tilemaps_1_data_row6"]
+	EMPTY: $7ccd-$7fff ($0333 bytes)
+	TOTAL EMPTY: $2135 bytes
