@@ -1,5 +1,5 @@
 SUMMARY:
-	ROM0: 1890 bytes used / 14494 free
+	ROM0: 1923 bytes used / 14461 free
 	ROMX: 7883 bytes used / 8501 free in 1 bank
 
 ROM0 bank #0:
@@ -14,7 +14,7 @@ ROM0 bank #0:
 	EMPTY: $0069-$00ff ($0097 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
-	SECTION: $0150-$083d ($06ee bytes) ["SmartMouth"]
+	SECTION: $0150-$085e ($070f bytes) ["SmartMouth"]
 	         $0150 = InitSample
 	         $0295 = InitSample.player_name_copy_loop
 	         $029c = InitSample.done
@@ -88,24 +88,24 @@ ROM0 bank #0:
 	         $074e = MenuMode.hide_menu
 	         $0758 = MenuMode.hide_menu_done
 	         $0759 = EditNamesMode
-	         $0768 = EditNamesMode.edit_interface_drawing_done
-	         $078c = EditNamesMode.y_loop
-	         $0792 = EditNamesMode.increment_key_y_done
-	         $079d = EditNamesMode.x_loop
-	         $07a3 = EditNamesMode.increment_key_x_done
-	         $07c5 = EditNamesMode.letter_selected_done
-	         $07d8 = EditNamesMode.letter_delete_done
-	         $07ea = EditNamesMode.wrap_min_y_done
-	         $07ed = EditNamesMode.decrement_key_highlight_y_done
-	         $07ff = EditNamesMode.wrap_max_y_done
-	         $0802 = EditNamesMode.increment_key_highlight_y_done
-	         $0814 = EditNamesMode.wrap_min_x_done
-	         $0817 = EditNamesMode.decrement_key_highlight_x_done
-	         $0829 = EditNamesMode.wrap_max_x_done
-	         $082c = EditNamesMode.increment_key_highlight_x_done
-	         $083d = EditNamesMode.exit_edit_mode_done
-	EMPTY: $083e-$3fff ($37c2 bytes)
-	TOTAL EMPTY: $389e bytes
+	         $076d = EditNamesMode.edit_interface_drawing_done
+	         $0791 = EditNamesMode.y_loop
+	         $0797 = EditNamesMode.increment_key_y_done
+	         $07a2 = EditNamesMode.x_loop
+	         $07a8 = EditNamesMode.increment_key_x_done
+	         $07ca = EditNamesMode.letter_selected_done
+	         $07f9 = EditNamesMode.letter_delete_done
+	         $080b = EditNamesMode.wrap_min_y_done
+	         $080e = EditNamesMode.decrement_key_highlight_y_done
+	         $0820 = EditNamesMode.wrap_max_y_done
+	         $0823 = EditNamesMode.increment_key_highlight_y_done
+	         $0835 = EditNamesMode.wrap_min_x_done
+	         $0838 = EditNamesMode.decrement_key_highlight_x_done
+	         $084a = EditNamesMode.wrap_max_x_done
+	         $084d = EditNamesMode.increment_key_highlight_x_done
+	         $085e = EditNamesMode.exit_edit_mode_done
+	EMPTY: $085f-$3fff ($37a1 bytes)
+	TOTAL EMPTY: $387d bytes
 
 ROMX bank #1:
 	EMPTY: $4000-$457f ($0580 bytes)

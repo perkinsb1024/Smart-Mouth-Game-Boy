@@ -842,6 +842,7 @@ EditNamesMode:
     ld a, [WRAM_EDIT_INTERFACE_NEEDS_INIT]
     cp a, 1
     jr nz, .edit_interface_drawing_done
+    copy [WRAM_PLAYER_NAME_EDIT_INDEX], 8
     copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 0
     call DrawEditInterace
 .edit_interface_drawing_done
@@ -920,6 +921,26 @@ EditNamesMode:
     jr z, .letter_delete_done
     dec a
     ld [WRAM_PLAYER_NAME_EDIT_INDEX], a
+    ; Delete the last letter in the display name
+    ld hl, EDIT_PLAYER_NAME_DISPLAY
+    ld b, 0
+    ld c, a
+    add hl, bc
+    copy [hl], FONT_SPACE_OFFSET
+    ; Now delete the last letter in the saved name, start at the first player's name, we'll increment next
+    ld hl, WRAM_PLAYER_1_NAME
+    ; Add the current editing index
+    add hl, bc
+    ; Load which player we're currently pointing to
+    ; ld b, b
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ; Multiply by 8 to account for name length
+    sla a
+    sla a
+    sla a
+    ld c, a
+    add hl, bc
+    copy [hl], FONT_SPACE_OFFSET
 .letter_delete_done
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_UP
