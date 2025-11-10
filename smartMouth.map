@@ -1,5 +1,5 @@
 SUMMARY:
-	ROM0: 1678 bytes used / 14706 free
+	ROM0: 1864 bytes used / 14520 free
 	ROMX: 7883 bytes used / 8501 free in 1 bank
 
 ROM0 bank #0:
@@ -14,88 +14,96 @@ ROM0 bank #0:
 	EMPTY: $0069-$00ff ($0097 bytes)
 	SECTION: $0100-$014f ($0050 bytes) ["header"]
 	         $0100 = entrypoint
-	SECTION: $0150-$0769 ($061a bytes) ["SmartMouth"]
+	SECTION: $0150-$0823 ($06d4 bytes) ["SmartMouth"]
 	         $0150 = InitSample
-	         $028a = InitSample.done
-	         $02b6 = InitSample.load_tile_u1
-	         $02cd = InitSample.load_letter_copy_u2
-	         $02e2 = InitSample.load_letter_copy_u3
-	         $02f7 = UpdateSample
-	         $02fb = UpdateSample.wait_vblank
-	         $0345 = UpdateSample.game_mode_done
-	         $034c = UpdateSample.menu_mode_done
-	         $0353 = UpdateSample.edit_names_mode_done
-	         $0359 = InitOAM
-	         $0361 = InitOAM.init_oam
-	         $0368 = DrawGameTileLetters
-	         $0376 = DrawGameTileLetters.DrawTile0Line
-	         $037c = DrawGameTileLetters.DrawTile0Chr
-	         $03a7 = DrawGameTileLetters.DrawTile1Line
-	         $03ad = DrawGameTileLetters.DrawTile1Chr
-	         $03ce = DrawActiveArrow
-	         $03dc = DrawActiveArrow.player_1_arrow_done
-	         $03e5 = DrawActiveArrow.player_2_arrow_done
-	         $03ee = DrawActiveArrow.player_3_arrow_done
-	         $03f7 = DrawActiveArrow.player_4_arrow_done
-	         $03f8 = DrawKeyHighlight
-	         $040a = DrawEditInterace
-	         $0414 = DrawEditInterace.erase_tile_u4
-	         $0423 = DrawEditInterace.load_tile_row_1_u5
-	         $0431 = DrawEditInterace.load_tile_row_2_u5
-	         $043c = DrawEditInterace.load_tile_row_3_u5
-	         $0447 = DrawEditInterace.load_tile_row_4_u5
-	         $0456 = DrawEditInterace.loop_u6
-	         $0462 = GameplayLogic
-	         $0482 = GameplayLogic.draw_double_digit_score_u7
-	         $0484 = GameplayLogic.score_count_tens_u7
-	         $0495 = GameplayLogic.draw_score_done_u7
-	         $04aa = GameplayLogic.draw_double_digit_score_u8
-	         $04ac = GameplayLogic.score_count_tens_u8
-	         $04bd = GameplayLogic.draw_score_done_u8
-	         $04d2 = GameplayLogic.draw_double_digit_score_u9
-	         $04d4 = GameplayLogic.score_count_tens_u9
-	         $04e5 = GameplayLogic.draw_score_done_u9
-	         $04fa = GameplayLogic.draw_double_digit_score_u10
-	         $04fc = GameplayLogic.score_count_tens_u10
-	         $050d = GameplayLogic.draw_score_done_u10
-	         $0537 = GameplayLogic.load_letter_copy_u11
-	         $055c = GameplayLogic.load_letter_copy_u12
-	         $0567 = GameplayLogic.display_new_letters_done
-	         $057f = GameplayLogic.update_tile_0_done
-	         $0583 = GameplayLogic.update_tile_1_done
-	         $058a = GameplayLogic.random_letter_done
-	         $059a = GameplayLogic.increment_arrow_done
-	         $05aa = GameplayLogic.decrement_arrow_done
-	         $05c2 = GameplayLogic.increment_score_done
-	         $05da = GameplayLogic.decrement_score_done
-	         $05f0 = GameplayLogic.show_menu_done
-	         $05f1 = MenuMode
-	         $0633 = MenuMode.save_game_done
-	         $0651 = MenuMode.reset_scores_done
-	         $0668 = MenuMode.edit_names_done
-	         $066f = MenuMode.menu_item_selected_done
-	         $067f = MenuMode.increment_arrow_done
-	         $068f = MenuMode.decrement_arrow_done
-	         $0696 = MenuMode.hide_menu
-	         $06a0 = MenuMode.hide_menu_done
-	         $06a1 = EditNamesMode
-	         $06b0 = EditNamesMode.edit_interface_drawing_done
-	         $06d4 = EditNamesMode.y_loop
-	         $06da = EditNamesMode.increment_key_y_done
-	         $06e5 = EditNamesMode.x_loop
-	         $06eb = EditNamesMode.increment_key_x_done
-	         $0702 = EditNamesMode.letter_selected_done
-	         $0715 = EditNamesMode.letter_delete_done
-	         $0727 = EditNamesMode.wrap_min_y_done
-	         $072a = EditNamesMode.decrement_key_highlight_y_done
-	         $073c = EditNamesMode.wrap_max_y_done
-	         $073f = EditNamesMode.increment_key_highlight_y_done
-	         $0751 = EditNamesMode.wrap_min_x_done
-	         $0754 = EditNamesMode.decrement_key_highlight_x_done
-	         $0766 = EditNamesMode.wrap_max_x_done
-	         $0769 = EditNamesMode.increment_key_highlight_x_done
-	EMPTY: $076a-$3fff ($3896 bytes)
-	TOTAL EMPTY: $3972 bytes
+	         $028f = InitSample.done
+	         $02bb = InitSample.load_tile_u1
+	         $02d2 = InitSample.load_letter_copy_u2
+	         $02e7 = InitSample.load_letter_copy_u3
+	         $02ff = UpdateSample
+	         $0303 = UpdateSample.wait_vblank
+	         $034d = UpdateSample.game_mode_done
+	         $0354 = UpdateSample.menu_mode_done
+	         $035b = UpdateSample.edit_names_mode_done
+	         $0361 = InitOAM
+	         $0369 = InitOAM.init_oam
+	         $0370 = DrawGameTileLetters
+	         $037e = DrawGameTileLetters.DrawTile0Line
+	         $0384 = DrawGameTileLetters.DrawTile0Chr
+	         $03af = DrawGameTileLetters.DrawTile1Line
+	         $03b5 = DrawGameTileLetters.DrawTile1Chr
+	         $03d6 = DrawPlayerNames
+	         $03df = DrawPlayerNames.loop_1
+	         $03ee = DrawPlayerNames.loop_2
+	         $03fd = DrawPlayerNames.loop_3
+	         $040c = DrawPlayerNames.loop_4
+	         $0413 = DrawActiveArrow
+	         $0421 = DrawActiveArrow.player_1_arrow_done
+	         $042a = DrawActiveArrow.player_2_arrow_done
+	         $0433 = DrawActiveArrow.player_3_arrow_done
+	         $043c = DrawActiveArrow.player_4_arrow_done
+	         $043d = DrawKeyHighlight
+	         $0464 = DrawEditInterace
+	         $046e = DrawEditInterace.erase_tile_u4
+	         $047d = DrawEditInterace.load_tile_row_1_u5
+	         $048b = DrawEditInterace.load_tile_row_2_u5
+	         $0496 = DrawEditInterace.load_tile_row_3_u5
+	         $04a1 = DrawEditInterace.load_tile_row_4_u5
+	         $04bf = DrawEditInterace.loop_u6
+	         $04cb = GameplayLogic
+	         $04eb = GameplayLogic.draw_double_digit_score_u7
+	         $04ed = GameplayLogic.score_count_tens_u7
+	         $04fe = GameplayLogic.draw_score_done_u7
+	         $0513 = GameplayLogic.draw_double_digit_score_u8
+	         $0515 = GameplayLogic.score_count_tens_u8
+	         $0526 = GameplayLogic.draw_score_done_u8
+	         $053b = GameplayLogic.draw_double_digit_score_u9
+	         $053d = GameplayLogic.score_count_tens_u9
+	         $054e = GameplayLogic.draw_score_done_u9
+	         $0563 = GameplayLogic.draw_double_digit_score_u10
+	         $0565 = GameplayLogic.score_count_tens_u10
+	         $0576 = GameplayLogic.draw_score_done_u10
+	         $0587 = GameplayLogic.load_tile_u11
+	         $05ab = GameplayLogic.game_interface_init_done
+	         $05d5 = GameplayLogic.load_letter_copy_u12
+	         $05fa = GameplayLogic.load_letter_copy_u13
+	         $0605 = GameplayLogic.display_new_letters_done
+	         $061d = GameplayLogic.update_tile_0_done
+	         $0621 = GameplayLogic.update_tile_1_done
+	         $0628 = GameplayLogic.random_letter_done
+	         $0638 = GameplayLogic.increment_arrow_done
+	         $0648 = GameplayLogic.decrement_arrow_done
+	         $0660 = GameplayLogic.increment_score_done
+	         $0678 = GameplayLogic.decrement_score_done
+	         $068e = GameplayLogic.show_menu_done
+	         $068f = MenuMode
+	         $06d1 = MenuMode.save_game_done
+	         $06ef = MenuMode.reset_scores_done
+	         $0706 = MenuMode.edit_names_done
+	         $070d = MenuMode.menu_item_selected_done
+	         $071d = MenuMode.increment_arrow_done
+	         $072d = MenuMode.decrement_arrow_done
+	         $0734 = MenuMode.hide_menu
+	         $073e = MenuMode.hide_menu_done
+	         $073f = EditNamesMode
+	         $074e = EditNamesMode.edit_interface_drawing_done
+	         $0772 = EditNamesMode.y_loop
+	         $0778 = EditNamesMode.increment_key_y_done
+	         $0783 = EditNamesMode.x_loop
+	         $0789 = EditNamesMode.increment_key_x_done
+	         $07ab = EditNamesMode.letter_selected_done
+	         $07be = EditNamesMode.letter_delete_done
+	         $07d0 = EditNamesMode.wrap_min_y_done
+	         $07d3 = EditNamesMode.decrement_key_highlight_y_done
+	         $07e5 = EditNamesMode.wrap_max_y_done
+	         $07e8 = EditNamesMode.increment_key_highlight_y_done
+	         $07fa = EditNamesMode.wrap_min_x_done
+	         $07fd = EditNamesMode.decrement_key_highlight_x_done
+	         $080f = EditNamesMode.wrap_max_x_done
+	         $0812 = EditNamesMode.increment_key_highlight_x_done
+	         $0823 = EditNamesMode.exit_edit_mode_done
+	EMPTY: $0824-$3fff ($37dc bytes)
+	TOTAL EMPTY: $38b8 bytes
 
 ROMX bank #1:
 	EMPTY: $4000-$457f ($0580 bytes)

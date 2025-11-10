@@ -47,7 +47,9 @@ def KEYBOARD_HIGHLIGHT_MIN_Y        equ 24
 def KEYBOARD_HIGHLIGHT_MAX_X        equ 88
 def KEYBOARD_HIGHLIGHT_MAX_Y        equ 48
 
-def EDIT_PLAYER_NAME_DISPLAY        equ _SCRN0 + 8 * 32 + 1
+def EDIT_PLAYER_NAME_ROW            equ 8
+def EDIT_PLAYER_NAME_ROW_PX         equ (EDIT_PLAYER_NAME_ROW * 8 + 16)
+def EDIT_PLAYER_NAME_DISPLAY        equ (_SCRN0 + EDIT_PLAYER_NAME_ROW * 32 + 1)
 
 rsset _RAM
 
@@ -74,6 +76,7 @@ def WRAM_PLAYER_2_SCORE             rb 1
 def WRAM_PLAYER_3_SCORE             rb 1
 def WRAM_PLAYER_4_SCORE             rb 1
 def WRAM_MENU_ARROW_INDEX           rb 1
+def WRAM_GAME_INTERFACE_NEEDS_INIT  rb 1
 def WRAM_EDIT_INTERFACE_NEEDS_INIT  rb 1
 def WRAM_KEY_HIGHLIGHT_X            rb 1
 def WRAM_KEY_HIGHLIGHT_Y            rb 1
@@ -143,9 +146,20 @@ macro DrawKeyboard
         jr nz, .load_tile_row_4\@
 endm
 
-macro DrawPlayerName
-    ld d, high(WRAM_PLAYER_1_NAME + 8 * (\1 - 1))
-    ld e, low(WRAM_PLAYER_1_NAME + 8 * (\1 - 1))
+macro DrawEditPlayerName
+    ; Find out which player we have highlighted
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ; Multiply by 8 to account for length of name
+    sla a
+    sla a
+    sla a
+    ld h, high(WRAM_PLAYER_1_NAME)
+    ld l, low(WRAM_PLAYER_1_NAME)
+    ld d, 0
+    ld e, a
+    add hl, de
+    ld d, h
+    ld e, l
     ld hl, EDIT_PLAYER_NAME_DISPLAY
     ld c, 8
 .loop\@
@@ -217,6 +231,13 @@ macro DrawScore
     add a, c
     ld [hl], a
 .draw_score_done\@
+endm
+
+macro HideKeyHighlights
+    ld hl, _OAMRAM + sizeof_OAM_ATTRS * 32
+    copy [hl], 0
+    ld hl, _OAMRAM + sizeof_OAM_ATTRS * 33
+    copy [hl], 0
 endm
 
 macro DrawScores
@@ -360,9 +381,10 @@ InitSample:
     copy [WRAM_PLAYER_3_SCORE], 0
     copy [WRAM_PLAYER_4_SCORE], 0
     copy [WRAM_MENU_ARROW_INDEX], 0
+    copy [WRAM_GAME_INTERFACE_NEEDS_INIT], 0
     copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 0
-    copy [WRAM_KEY_HIGHLIGHT_X], 32
-    copy [WRAM_KEY_HIGHLIGHT_Y], 32
+    copy [WRAM_KEY_HIGHLIGHT_X], 16
+    copy [WRAM_KEY_HIGHLIGHT_Y], 24
     copy [WRAM_PLAYER_NAME_EDIT_INDEX], 8
     SetDefaultPlayerNames
 
@@ -391,6 +413,7 @@ InitSample:
     LoadLetterFromAddressOffset 1, CHAR_Z_ADDR_OFFSET
 
     call DrawGameTileLetters
+    call DrawPlayerNames
 
     ; set the graphics parameters and turn back LCD on
     TurnOnLCD
@@ -520,6 +543,48 @@ DrawGameTileLetters:
     jr nz, .DrawTile1Line
     ret
 
+DrawPlayerNames:
+    ld d, high(WRAM_PLAYER_1_NAME)
+    ld e, low(WRAM_PLAYER_1_NAME)
+    ld hl, INITIAL_PLAYER_ARROW_ADDRESS + 2
+    ld c, 8
+.loop_1
+    copy [hli], [de]
+    inc de
+    dec c
+    jr nz, .loop_1
+
+    ld d, high(WRAM_PLAYER_2_NAME)
+    ld e, low(WRAM_PLAYER_2_NAME)
+    ld hl, INITIAL_PLAYER_ARROW_ADDRESS + ARROW_ADDRESS_STEP + 2
+    ld c, 8
+.loop_2
+    copy [hli], [de]
+    inc de
+    dec c
+    jr nz, .loop_2
+
+    ld d, high(WRAM_PLAYER_3_NAME)
+    ld e, low(WRAM_PLAYER_3_NAME)
+    ld hl, INITIAL_PLAYER_ARROW_ADDRESS + ARROW_ADDRESS_STEP * 2 + 2
+    ld c, 8
+.loop_3
+    copy [hli], [de]
+    inc de
+    dec c
+    jr nz, .loop_3
+
+    ld d, high(WRAM_PLAYER_4_NAME)
+    ld e, low(WRAM_PLAYER_4_NAME)
+    ld hl, INITIAL_PLAYER_ARROW_ADDRESS + ARROW_ADDRESS_STEP * 3 + 2
+    ld c, 8
+.loop_4
+    copy [hli], [de]
+    inc de
+    dec c
+    jr nz, .loop_4
+    ret
+
 DrawActiveArrow:
     ld a, [de]
     ld b, 0
@@ -555,10 +620,22 @@ DrawActiveArrow:
 
 DrawKeyHighlight:
     ld hl, _OAMRAM + sizeof_OAM_ATTRS * 32
+    ; Draw the Keyboard highlight
     copy [hli], [WRAM_KEY_HIGHLIGHT_Y]
     copy [hli], [WRAM_KEY_HIGHLIGHT_X]
     copy [hli], $02 ; Filled tile
-    copy [hl], OAMF_PRI | OAMF_PAL0
+    copy [hli], OAMF_PRI | OAMF_PAL0
+    ; Draw the edit name active character highlight
+    copy [hli], EDIT_PLAYER_NAME_ROW_PX
+    ld a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    ; Convert from tiles to pixels
+    sla a
+    sla a
+    sla a
+    add a, 16
+    ld [hli], a
+    copy [hli], $02 ; Filled tile
+    copy [hli], OAMF_PRI | OAMF_PAL0
     ret
 
 DrawEditInterace:
@@ -566,7 +643,7 @@ DrawEditInterace:
     call InitOAM
     ClearTileMap0
     DrawKeyboard
-    DrawPlayerName 1
+    DrawEditPlayerName
     TurnOnLCD
     ret
 
@@ -577,6 +654,18 @@ GameplayLogic:
     ld l, low(INITIAL_PLAYER_ARROW_ADDRESS)
     call DrawActiveArrow
     DrawScores
+
+    ld a, [WRAM_GAME_INTERFACE_NEEDS_INIT]
+    cp a, 0
+    jr z, .game_interface_init_done
+    TurnOffLCD
+    LoadGraphicsDataIntoVRAM
+    HideKeyHighlights
+    call DrawGameTileLetters
+    call DrawPlayerNames
+    TurnOnLCD
+    copy [WRAM_GAME_INTERFACE_NEEDS_INIT], 0
+.game_interface_init_done
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
     jr nz, .display_new_letters_done
@@ -779,17 +868,29 @@ EditNamesMode:
 .increment_key_x_done
     ld d, h
     ld e, l
+    ; First edit the display name
     ld hl, EDIT_PLAYER_NAME_DISPLAY
-    copy c, [WRAM_PLAYER_NAME_EDIT_INDEX]
-    add hl, bc
-    copy [hl], [de]
-    ; Todo: Change which player's name we're editing
-    ld hl, WRAM_PLAYER_1_NAME
-    add hl, bc
-    copy [hl], [de]
-    ld a, c
+    ld a, [WRAM_PLAYER_NAME_EDIT_INDEX]
     inc a
     ld [WRAM_PLAYER_NAME_EDIT_INDEX], a
+    dec a
+    ld c, a
+    add hl, bc
+    copy [hl], [de]
+    ; Now edit the saved name, start at the first player's name, we'll increment next
+    ld hl, WRAM_PLAYER_1_NAME
+    ; Add the current editing index
+    add hl, bc
+    ; Load which player we're currently pointing to
+    ; ld b, b
+    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ; Multiply by 8 to account for name length
+    sla a
+    sla a
+    sla a
+    ld c, a
+    add hl, bc
+    copy [hl], [de]
 .letter_selected_done
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_B
@@ -845,6 +946,12 @@ EditNamesMode:
 .wrap_max_x_done
     ld [WRAM_KEY_HIGHLIGHT_X], a
 .increment_key_highlight_x_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_START
+    jr nz, .exit_edit_mode_done
+    copy [WRAM_GAME_INTERFACE_NEEDS_INIT], 1
+    copy [WRAM_MODE], MODE_GAMEPLAY
+.exit_edit_mode_done
     ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
