@@ -42,6 +42,13 @@ def MENU_RESET_SCORES               equ 1
 def MENU_EDIT_NAMES                 equ 2
 def MENU_EXIT_MENU                  equ 3
 
+def KEYBOARD_HIGHLIGHT_MIN_X        equ 16
+def KEYBOARD_HIGHLIGHT_MIN_Y        equ 24
+def KEYBOARD_HIGHLIGHT_MAX_X        equ 88
+def KEYBOARD_HIGHLIGHT_MAX_Y        equ 48
+
+def EDIT_PLAYER_NAME_DISPLAY        equ _SCRN0 + 8 * 32 + 1
+
 rsset _RAM
 
 def WRAM_IS_VBLANK                  rb 1
@@ -58,11 +65,19 @@ def WRAM_TILE_1_CHAR                rb 1
 def WRAM_TILE_TO_UPDATE             rb 1
 def WRAM_TILE_INDEX                 rb 1
 def WRAM_PLAYER_ARROW_INDEX         rb 1
+def WRAM_PLAYER_1_NAME              rb 8
+def WRAM_PLAYER_2_NAME              rb 8
+def WRAM_PLAYER_3_NAME              rb 8
+def WRAM_PLAYER_4_NAME              rb 8
 def WRAM_PLAYER_1_SCORE             rb 1
 def WRAM_PLAYER_2_SCORE             rb 1
 def WRAM_PLAYER_3_SCORE             rb 1
 def WRAM_PLAYER_4_SCORE             rb 1
 def WRAM_MENU_ARROW_INDEX           rb 1
+def WRAM_EDIT_INTERFACE_NEEDS_INIT  rb 1
+def WRAM_KEY_HIGHLIGHT_X            rb 1
+def WRAM_KEY_HIGHLIGHT_Y            rb 1
+def WRAM_PLAYER_NAME_EDIT_INDEX     rb 1
 
 def WRAM_END                        rb 0
 
@@ -82,6 +97,62 @@ macro LoadGraphicsDataIntoVRAM
         ld a, d
         cp a, high(GRAPHICS_DATA_ADDRESS_END)
         jr nz, .load_tile\@
+endm
+
+macro ClearTileMap0
+    ld hl, _SCRN0
+    .erase_tile\@
+    xor a
+    ld [hli], a
+    ld a, h
+    cp a, high(_SCRN1)
+    jr nz, .erase_tile\@
+endm
+
+macro DrawKeyboard
+    ld de, FONT_0_OFFSET
+    ld hl, _SCRN0 + 32 + 1
+    ld c, 10
+    .load_tile_row_1\@
+        copy [hli], low(de)
+        inc de
+        dec c
+        jr nz, .load_tile_row_1\@
+    ; Next row of letters
+    ld hl, _SCRN0 + 64 + 1
+    ld de, FONT_A_OFFSET
+    ld c, 10
+    .load_tile_row_2\@
+        copy [hli], low(de)
+        inc de
+        dec c
+        jr nz, .load_tile_row_2\@
+    ld hl, _SCRN0 + 96 + 1
+    ld c, 10
+    .load_tile_row_3\@
+        copy [hli], low(de)
+        inc de
+        dec c
+        jr nz, .load_tile_row_3\@
+    ld hl, _SCRN0 + 128 + 1
+    ld c, 10
+    .load_tile_row_4\@
+        copy [hli], low(de)
+        inc de
+        dec c
+        jr nz, .load_tile_row_4\@
+endm
+
+macro DrawPlayerName
+    ld d, high(WRAM_PLAYER_1_NAME + 8 * (\1 - 1))
+    ld e, low(WRAM_PLAYER_1_NAME + 8 * (\1 - 1))
+    ld hl, EDIT_PLAYER_NAME_DISPLAY
+    ld c, 8
+.loop\@
+    copy [hli], [de]
+    inc de
+    dec c
+    jr nz, .loop\@
 endm
 
 ; LoadLetterFromMapIndex 0, CHAR_A_ADDR_OFFSET
@@ -155,6 +226,41 @@ macro DrawScores
     DrawScore PLAYER_4_SCORE_ADDRESS, WRAM_PLAYER_4_SCORE
 endm
 
+macro SetDefaultPlayerNames
+    copy [WRAM_PLAYER_1_NAME + 0], FONT_A_OFFSET + CHAR_P
+    copy [WRAM_PLAYER_2_NAME + 0], FONT_A_OFFSET + CHAR_P
+    copy [WRAM_PLAYER_3_NAME + 0], FONT_A_OFFSET + CHAR_P
+    copy [WRAM_PLAYER_4_NAME + 0], FONT_A_OFFSET + CHAR_P
+    copy [WRAM_PLAYER_1_NAME + 1], FONT_A_OFFSET + CHAR_L
+    copy [WRAM_PLAYER_2_NAME + 1], FONT_A_OFFSET + CHAR_L
+    copy [WRAM_PLAYER_3_NAME + 1], FONT_A_OFFSET + CHAR_L
+    copy [WRAM_PLAYER_4_NAME + 1], FONT_A_OFFSET + CHAR_L
+    copy [WRAM_PLAYER_1_NAME + 2], FONT_A_OFFSET + CHAR_A
+    copy [WRAM_PLAYER_2_NAME + 2], FONT_A_OFFSET + CHAR_A
+    copy [WRAM_PLAYER_3_NAME + 2], FONT_A_OFFSET + CHAR_A
+    copy [WRAM_PLAYER_4_NAME + 2], FONT_A_OFFSET + CHAR_A
+    copy [WRAM_PLAYER_1_NAME + 3], FONT_A_OFFSET + CHAR_Y
+    copy [WRAM_PLAYER_2_NAME + 3], FONT_A_OFFSET + CHAR_Y
+    copy [WRAM_PLAYER_3_NAME + 3], FONT_A_OFFSET + CHAR_Y
+    copy [WRAM_PLAYER_4_NAME + 3], FONT_A_OFFSET + CHAR_Y
+    copy [WRAM_PLAYER_1_NAME + 4], FONT_A_OFFSET + CHAR_E
+    copy [WRAM_PLAYER_2_NAME + 4], FONT_A_OFFSET + CHAR_E
+    copy [WRAM_PLAYER_3_NAME + 4], FONT_A_OFFSET + CHAR_E
+    copy [WRAM_PLAYER_4_NAME + 4], FONT_A_OFFSET + CHAR_E
+    copy [WRAM_PLAYER_1_NAME + 5], FONT_A_OFFSET + CHAR_R
+    copy [WRAM_PLAYER_2_NAME + 5], FONT_A_OFFSET + CHAR_R
+    copy [WRAM_PLAYER_3_NAME + 5], FONT_A_OFFSET + CHAR_R
+    copy [WRAM_PLAYER_4_NAME + 5], FONT_A_OFFSET + CHAR_R
+    copy [WRAM_PLAYER_1_NAME + 6], FONT_SPACE_OFFSET
+    copy [WRAM_PLAYER_2_NAME + 6], FONT_SPACE_OFFSET
+    copy [WRAM_PLAYER_3_NAME + 6], FONT_SPACE_OFFSET
+    copy [WRAM_PLAYER_4_NAME + 6], FONT_SPACE_OFFSET
+    copy [WRAM_PLAYER_1_NAME + 7], FONT_0_OFFSET + 1
+    copy [WRAM_PLAYER_2_NAME + 7], FONT_0_OFFSET + 2
+    copy [WRAM_PLAYER_3_NAME + 7], FONT_0_OFFSET + 3
+    copy [WRAM_PLAYER_4_NAME + 7], FONT_0_OFFSET + 4
+endm
+
 macro LoadSave
     ; enable the ERAM
     ld a, $0A
@@ -207,17 +313,14 @@ macro WriteSave
     ld [rRAMG], a
 endm
 
+macro TurnOffLCD
+    xor a
+    ld [rLCDC], a
+endm
 
-; clear the OAM
-macro InitOAM
-    ld c, OAM_COUNT
-    ld hl, _OAMRAM + OAMA_Y
-    ld de, sizeof_OAM_ATTRS
-    .init_oam\@
-        ld [hl], 0
-        add hl, de
-        dec c
-        jr nz, .init_oam\@
+macro TurnOnLCD
+    ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON | LCDCF_WINON
+    ld [rLCDC], a
 endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -257,6 +360,12 @@ InitSample:
     copy [WRAM_PLAYER_3_SCORE], 0
     copy [WRAM_PLAYER_4_SCORE], 0
     copy [WRAM_MENU_ARROW_INDEX], 0
+    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 0
+    copy [WRAM_KEY_HIGHLIGHT_X], 32
+    copy [WRAM_KEY_HIGHLIGHT_Y], 32
+    copy [WRAM_PLAYER_NAME_EDIT_INDEX], 8
+    SetDefaultPlayerNames
+
 
     ; Load the save file
     LoadSave
@@ -276,12 +385,73 @@ InitSample:
     copy [rWY], WINDOW_HIDDEN_Y
 
     ; Init Graphics
-    InitOAM
+    call InitOAM
     LoadGraphicsDataIntoVRAM
     LoadLetterFromAddressOffset 0, CHAR_A_ADDR_OFFSET
     LoadLetterFromAddressOffset 1, CHAR_Z_ADDR_OFFSET
 
-    ; Draw the first Game Tile
+    call DrawGameTileLetters
+
+    ; set the graphics parameters and turn back LCD on
+    TurnOnLCD
+
+    ; enable interrupts
+    ld a, IEF_VBLANK | IEF_HILO
+    ld [rIE], a
+    ei
+
+    ret
+
+UpdateSample:
+    ld hl, WRAM_IS_VBLANK
+    xor a
+    .wait_vblank
+        halt
+        cp a, [hl]
+        jr z, .wait_vblank
+        ld [hl], a
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ; vblank
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    UpdatePadInput WRAM_PAD_INPUT
+
+    ld a, [WRAM_MODE]
+    cp a, MODE_GAMEPLAY
+    jr nz, .game_mode_done
+    call GameplayLogic
+.game_mode_done
+    cp a, MODE_MENU
+    jr nz, .menu_mode_done
+    call MenuMode
+.menu_mode_done
+    cp a, MODE_EDIT_NAMES
+    jr nz, .edit_names_mode_done
+    call EditNamesMode
+.edit_names_mode_done
+
+    ; Mark end of VBlank
+    copy [WRAM_IS_VBLANK], 0
+    ret
+
+export InitSample, UpdateSample
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitOAM:
+    ; clear the OAM
+    ld c, OAM_COUNT
+    ld hl, _OAMRAM + OAMA_Y
+    ld de, sizeof_OAM_ATTRS
+    .init_oam
+        ld [hl], 0
+        add hl, de
+        dec c
+        jr nz, .init_oam
+    ret
+
+DrawGameTileLetters:
+    ; Draw the first Game Tile Letter
     ld b, 4
     copy e, [WRAM_TILE_0_Y]
     copy [WRAM_TILE_INDEX], $80
@@ -315,7 +485,7 @@ InitSample:
     dec b
     jr nz, .DrawTile0Line
 
-    ; Draw the second Game Tile
+    ; Draw the second Game Tile Letter
     ld b, 4
     copy e, [WRAM_TILE_1_Y]
     copy [WRAM_TILE_INDEX], $90
@@ -348,49 +518,7 @@ InitSample:
     ld e, a
     dec b
     jr nz, .DrawTile1Line
-
-    ; set the graphics parameters and turn back LCD on
-    ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON | LCDCF_WINON
-    ld [rLCDC], a
-
-    ; enable interrupts
-    ld a, IEF_VBLANK | IEF_HILO
-    ld [rIE], a
-    ei
-
     ret
-
-UpdateSample:
-    ld hl, WRAM_IS_VBLANK
-    xor a
-    .wait_vblank
-        halt
-        cp a, [hl]
-        jr z, .wait_vblank
-        ld [hl], a
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ; vblank
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    UpdatePadInput WRAM_PAD_INPUT
-
-    ld a, [WRAM_MODE]
-    cp a, MODE_GAMEPLAY
-    jr nz, .game_mode_done
-    call GameplayLogic
-.game_mode_done
-    cp a, MODE_MENU
-    jr nz, .menu_mode_done
-    call MenuMode
-.menu_mode_done
-
-    ; Mark end of VBlank
-    copy [WRAM_IS_VBLANK], 0
-    ret
-
-export InitSample, UpdateSample
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DrawActiveArrow:
     ld a, [de]
@@ -425,6 +553,23 @@ DrawActiveArrow:
 .player_4_arrow_done
     ret
 
+DrawKeyHighlight:
+    ld hl, _OAMRAM + sizeof_OAM_ATTRS * 32
+    copy [hli], [WRAM_KEY_HIGHLIGHT_Y]
+    copy [hli], [WRAM_KEY_HIGHLIGHT_X]
+    copy [hli], $02 ; Filled tile
+    copy [hl], OAMF_PRI | OAMF_PAL0
+    ret
+
+DrawEditInterace:
+    TurnOffLCD
+    call InitOAM
+    ClearTileMap0
+    DrawKeyboard
+    DrawPlayerName 1
+    TurnOnLCD
+    ret
+
 GameplayLogic:
     ld d, high(WRAM_PLAYER_ARROW_INDEX)
     ld e, low(WRAM_PLAYER_ARROW_INDEX)
@@ -435,15 +580,13 @@ GameplayLogic:
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
     jr nz, .display_new_letters_done
-        xor a
         ; Turn off LCD - Make sure this is near the top of VBlank
-        ld [rLCDC], a
+        TurnOffLCD
         ld a, [WRAM_TILE_0_CHAR]
         LoadLetterFromMapIndex 0, a
         ld a, [WRAM_TILE_1_CHAR]
         LoadLetterFromMapIndex 1, a
-        ld a, LCDCF_ON | LCDCF_WIN9C00 | LCDCF_BG8000 | LCDCF_BG9800 | LCDCF_OBJ8 | LCDCF_OBJON | LCDCF_BGON | LCDCF_WINON
-        ld [rLCDC], a
+        TurnOnLCD
     .display_new_letters_done
 
     ld a, [rDIV]
@@ -549,6 +692,15 @@ MenuMode:
     jp .hide_menu
 .reset_scores_done
     ld a, [WRAM_MENU_ARROW_INDEX]
+    cp a, MENU_EDIT_NAMES
+    jr nz, .edit_names_done
+    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 1
+    ; Can't jump to .hide_menu because that sets the mode back to gameplay
+    copy [WRAM_MODE], MODE_EDIT_NAMES
+    copy [rWY], WINDOW_HIDDEN_Y
+    ret
+.edit_names_done
+    ld a, [WRAM_MENU_ARROW_INDEX]
     cp a, MENU_EXIT_MENU
     jr z, .hide_menu
 .menu_item_selected_done
@@ -577,7 +729,125 @@ MenuMode:
 .hide_menu_done
     ret
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+EditNamesMode:
+    ; Check if we need to initialize the interface
+    ld a, [WRAM_EDIT_INTERFACE_NEEDS_INIT]
+    cp a, 1
+    jr nz, .edit_interface_drawing_done
+    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 0
+    call DrawEditInterace
+.edit_interface_drawing_done
+    call DrawKeyHighlight
+
+    ; Check key input
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
+    jr nz, .letter_selected_done
+    copy a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    ; If we're past the end of the name, do nothing
+    cp a, 8
+    jr z, .letter_selected_done
+    ; Get the start of the VRAM
+    ld hl, _SCRN0
+    ; Get the highlight Y index
+    ld a, [WRAM_KEY_HIGHLIGHT_Y]
+    ; Divide by 8 to get tiles
+    srl a
+    srl a
+    srl a
+    ; Account for the sprites being 16 Y pixels offset
+    sub a, 1
+    ld b, 0
+    ld c, 32
+.y_loop
+    dec a
+    jr z, .increment_key_y_done
+    add hl, bc
+    jr .y_loop
+.increment_key_y_done
+    ld c, 1
+    ; Get the highlight X index
+    ld a, [WRAM_KEY_HIGHLIGHT_X]
+    ; Divide by 8 to get tiles
+    srl a
+    srl a
+    srl a
+.x_loop
+    dec a
+    jr z, .increment_key_x_done
+    add hl, bc
+    jr .x_loop
+.increment_key_x_done
+    ld d, h
+    ld e, l
+    ld hl, EDIT_PLAYER_NAME_DISPLAY
+    copy c, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    add hl, bc
+    copy [hl], [de]
+    ; Todo: Change which player's name we're editing
+    ld hl, WRAM_PLAYER_1_NAME
+    add hl, bc
+    copy [hl], [de]
+    ld a, c
+    inc a
+    ld [WRAM_PLAYER_NAME_EDIT_INDEX], a
+.letter_selected_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_B
+    jr nz, .letter_delete_done
+    copy a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    ; If we're at the start of the name, do nothing
+    cp a, 0
+    jr z, .letter_delete_done
+    dec a
+    ld [WRAM_PLAYER_NAME_EDIT_INDEX], a
+.letter_delete_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_UP
+    jr nz, .decrement_key_highlight_y_done
+    ld a, [WRAM_KEY_HIGHLIGHT_Y]
+    sub a, 8
+    cp a, KEYBOARD_HIGHLIGHT_MIN_Y
+    jr nc, .wrap_min_y_done
+    ld a, KEYBOARD_HIGHLIGHT_MAX_Y
+.wrap_min_y_done
+    ld [WRAM_KEY_HIGHLIGHT_Y], a
+.decrement_key_highlight_y_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_DOWN
+    jr nz, .increment_key_highlight_y_done
+    ld a, [WRAM_KEY_HIGHLIGHT_Y]
+    add a, 8
+    cp a, KEYBOARD_HIGHLIGHT_MAX_Y + 8
+    jr nz, .wrap_max_y_done
+    ld a, KEYBOARD_HIGHLIGHT_MIN_Y
+.wrap_max_y_done
+    ld [WRAM_KEY_HIGHLIGHT_Y], a
+.increment_key_highlight_y_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_LEFT
+    jr nz, .decrement_key_highlight_x_done
+    ld a, [WRAM_KEY_HIGHLIGHT_X]
+    sub a, 8
+    cp a, KEYBOARD_HIGHLIGHT_MIN_X
+    jr nc, .wrap_min_x_done
+    ld a, KEYBOARD_HIGHLIGHT_MAX_X
+.wrap_min_x_done
+    ld [WRAM_KEY_HIGHLIGHT_X], a
+.decrement_key_highlight_x_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_RIGHT
+    jr nz, .increment_key_highlight_x_done
+    ld a, [WRAM_KEY_HIGHLIGHT_X]
+    add a, 8
+    cp a, KEYBOARD_HIGHLIGHT_MAX_X + 8
+    jr nz, .wrap_max_x_done
+    ld a, KEYBOARD_HIGHLIGHT_MIN_X
+.wrap_max_x_done
+    ld [WRAM_KEY_HIGHLIGHT_X], a
+.increment_key_highlight_x_done
+    ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 ; AABBBCCCDDDEEEFFGGGHHHIIJKLLLMMMNNNNOOOPPPQRRRSSSSTTTTUUUVWWXYYZ
 ; Weighted alphabet to make more common letters appear more frequently
 section "game_tile_addresses", romx[ALPHABET_MAP_START], bank[1]
