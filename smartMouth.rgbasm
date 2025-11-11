@@ -47,7 +47,7 @@ def KEYBOARD_HIGHLIGHT_MIN_Y        equ 24
 def KEYBOARD_HIGHLIGHT_MAX_X        equ 88
 def KEYBOARD_HIGHLIGHT_MAX_Y        equ 48
 
-def EDIT_PLAYER_NAME_ROW            equ 8
+def EDIT_PLAYER_NAME_ROW            equ 6
 def EDIT_PLAYER_NAME_ROW_PX         equ (EDIT_PLAYER_NAME_ROW * 8 + 16)
 def EDIT_PLAYER_NAME_DISPLAY        equ (_SCRN0 + EDIT_PLAYER_NAME_ROW * 32 + 1)
 
@@ -147,27 +147,40 @@ macro DrawKeyboard
         jr nz, .load_tile_row_4\@
 endm
 
-macro DrawEditPlayerName
-    ; Find out which player we have highlighted
-    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
-    ; Multiply by 8 to account for length of name
-    sla a
-    sla a
-    sla a
-    ld h, high(WRAM_PLAYER_1_NAME)
-    ld l, low(WRAM_PLAYER_1_NAME)
-    ld d, 0
-    ld e, a
-    add hl, de
-    ld d, h
-    ld e, l
-    ld hl, EDIT_PLAYER_NAME_DISPLAY
+macro DrawEditPlayerNames
+    ld hl, WRAM_PLAYER_1_NAME
+    ld d, high(EDIT_PLAYER_NAME_DISPLAY)
+    ld e, low(EDIT_PLAYER_NAME_DISPLAY)
     ld c, 8
-.loop\@
-    copy [hli], [de]
+.loop_1\@
+    copy [de], [hli]
     inc de
     dec c
-    jr nz, .loop\@
+    jr nz, .loop_1\@
+    ld d, high(EDIT_PLAYER_NAME_DISPLAY + 32)
+    ld e, low(EDIT_PLAYER_NAME_DISPLAY + 32)
+    ld c, 8
+.loop_2\@
+    copy [de], [hli]
+    inc de
+    dec c
+    jr nz, .loop_2\@
+    ld d, high(EDIT_PLAYER_NAME_DISPLAY + 64)
+    ld e, low(EDIT_PLAYER_NAME_DISPLAY + 64)
+    ld c, 8
+.loop_3\@
+    copy [de], [hli]
+    inc de
+    dec c
+    jr nz, .loop_3\@
+    ld d, high(EDIT_PLAYER_NAME_DISPLAY + 96)
+    ld e, low(EDIT_PLAYER_NAME_DISPLAY + 96)
+    ld c, 8
+.loop_4\@
+    copy [de], [hli]
+    inc de
+    dec c
+    jr nz, .loop_4\@
 endm
 
 ; LoadLetterFromMapIndex 0, CHAR_A_ADDR_OFFSET
@@ -385,7 +398,7 @@ section "SmartMouth", rom0
 InitSample:
     ; Set WRAM variables
     InitPadInput WRAM_PAD_INPUT
-    copy [WRAM_MODE], MODE_EDIT_NAMES;MODE_GAMEPLAY
+    copy [WRAM_MODE], MODE_GAMEPLAY
     copy [WRAM_TILE_0_X], 36
     copy [WRAM_TILE_0_Y], 36
     copy [WRAM_TILE_1_X], 36 + 8 * 9
@@ -430,8 +443,8 @@ InitSample:
     ; Init Graphics
     call InitOAM
     LoadGraphicsDataIntoVRAM
-    LoadLetterFromAddressOffset 0, CHAR_A_ADDR_OFFSET
-    LoadLetterFromAddressOffset 1, CHAR_Z_ADDR_OFFSET
+    ; LoadLetterFromAddressOffset 0, CHAR_A_ADDR_OFFSET
+    ; LoadLetterFromAddressOffset 1, CHAR_Z_ADDR_OFFSET
 
     call DrawGameTileLetters
     call DrawPlayerNames
@@ -647,7 +660,16 @@ DrawKeyHighlight:
     copy [hli], $02 ; Filled tile
     copy [hli], OAMF_PRI | OAMF_PAL0
     ; Draw the edit name active character highlight
-    copy [hli], EDIT_PLAYER_NAME_ROW_PX
+    ld d, EDIT_PLAYER_NAME_ROW_PX
+    ; Load the current player index we're editing
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
+    ; Multiply by 8 to get pixel offset
+    sla a
+    sla a
+    sla a
+    ; Add to initial pixel value
+    add a, d
+    copy [hli], a
     ld a, [WRAM_EDIT_NAME_CHAR_INDEX]
     ; Convert from tiles to pixels
     sla a
@@ -664,7 +686,7 @@ DrawEditInterace:
     call InitOAM
     ClearTileMap0
     DrawKeyboard
-    DrawEditPlayerName
+    DrawEditPlayerNames
     TurnOnLCD
     ret
 
@@ -893,6 +915,17 @@ EditNamesMode:
     ld e, l
     ; First edit the display name
     ld hl, EDIT_PLAYER_NAME_DISPLAY
+    ; Navigate to the correct line
+    ld b, 0
+    ld c, 32
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
+.add_char_row_loop
+    cp a, 0
+    jr z, .add_char_row_loop_done
+    add hl, bc
+    dec a
+    jr .add_char_row_loop
+.add_char_row_loop_done
     ld a, [WRAM_EDIT_NAME_CHAR_INDEX]
     inc a
     ld [WRAM_EDIT_NAME_CHAR_INDEX], a
@@ -902,7 +935,7 @@ EditNamesMode:
     copy [hl], [de]
     ; Now edit the saved name, start at the first player's name, we'll increment next
     ld hl, WRAM_PLAYER_1_NAME
-    ; Add the current editing index
+    ; Add the current editing character index
     add hl, bc
     ; Load which player we're currently pointing to
     ; ld b, b
@@ -918,7 +951,7 @@ EditNamesMode:
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_B
     jr nz, .letter_delete_done
-    copy a, [WRAM_EDIT_NAME_CHAR_INDEX]
+    ld a, [WRAM_EDIT_NAME_CHAR_INDEX]
     ; If we're at the start of the name, do nothing
     cp a, 0
     jr z, .letter_delete_done
@@ -929,10 +962,21 @@ EditNamesMode:
     ld b, 0
     ld c, a
     add hl, bc
+    ; Navigate to the correct line
+    ld c, 32
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
+.delete_char_row_loop
+    cp a, 0
+    jr z, .delete_char_row_loop_done
+    add hl, bc
+    dec a
+    jr .delete_char_row_loop
+.delete_char_row_loop_done
     copy [hl], FONT_SPACE_OFFSET
     ; Now delete the last letter in the saved name, start at the first player's name, we'll increment next
     ld hl, WRAM_PLAYER_1_NAME
     ; Add the current editing index
+    copy c, [WRAM_EDIT_NAME_CHAR_INDEX]
     add hl, bc
     ; Load which player we're currently pointing to
     ; ld b, b
@@ -996,7 +1040,6 @@ EditNamesMode:
     inc a
     and a, %00000011
     ld [WRAM_EDIT_NAME_PLAYER_INDEX], a
-    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 1
 .increment_edit_name_done
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_START
