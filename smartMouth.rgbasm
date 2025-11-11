@@ -80,7 +80,8 @@ def WRAM_GAME_INTERFACE_NEEDS_INIT  rb 1
 def WRAM_EDIT_INTERFACE_NEEDS_INIT  rb 1
 def WRAM_KEY_HIGHLIGHT_X            rb 1
 def WRAM_KEY_HIGHLIGHT_Y            rb 1
-def WRAM_PLAYER_NAME_EDIT_INDEX     rb 1
+def WRAM_EDIT_NAME_PLAYER_INDEX     rb 2
+def WRAM_EDIT_NAME_CHAR_INDEX       rb 1
 
 def WRAM_END                        rb 0
 
@@ -148,7 +149,7 @@ endm
 
 macro DrawEditPlayerName
     ; Find out which player we have highlighted
-    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
     ; Multiply by 8 to account for length of name
     sla a
     sla a
@@ -384,7 +385,7 @@ section "SmartMouth", rom0
 InitSample:
     ; Set WRAM variables
     InitPadInput WRAM_PAD_INPUT
-    copy [WRAM_MODE], MODE_GAMEPLAY
+    copy [WRAM_MODE], MODE_EDIT_NAMES;MODE_GAMEPLAY
     copy [WRAM_TILE_0_X], 36
     copy [WRAM_TILE_0_Y], 36
     copy [WRAM_TILE_1_X], 36 + 8 * 9
@@ -401,10 +402,11 @@ InitSample:
     copy [WRAM_PLAYER_4_SCORE], 0
     copy [WRAM_MENU_ARROW_INDEX], 0
     copy [WRAM_GAME_INTERFACE_NEEDS_INIT], 0
-    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 0
+    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 1
     copy [WRAM_KEY_HIGHLIGHT_X], 16
     copy [WRAM_KEY_HIGHLIGHT_Y], 24
-    copy [WRAM_PLAYER_NAME_EDIT_INDEX], 8
+    copy [WRAM_EDIT_NAME_PLAYER_INDEX], 0
+    copy [WRAM_EDIT_NAME_CHAR_INDEX], 8
     SetDefaultPlayerNames
 
 
@@ -646,7 +648,7 @@ DrawKeyHighlight:
     copy [hli], OAMF_PRI | OAMF_PAL0
     ; Draw the edit name active character highlight
     copy [hli], EDIT_PLAYER_NAME_ROW_PX
-    ld a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    ld a, [WRAM_EDIT_NAME_CHAR_INDEX]
     ; Convert from tiles to pixels
     sla a
     sla a
@@ -803,6 +805,7 @@ MenuMode:
     cp a, MENU_EDIT_NAMES
     jr nz, .edit_names_done
     copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 1
+    copy [WRAM_EDIT_NAME_PLAYER_INDEX], [WRAM_PLAYER_ARROW_INDEX]
     ; Can't jump to .hide_menu because that sets the mode back to gameplay
     copy [WRAM_MODE], MODE_EDIT_NAMES
     copy [rWY], WINDOW_HIDDEN_Y
@@ -842,7 +845,7 @@ EditNamesMode:
     ld a, [WRAM_EDIT_INTERFACE_NEEDS_INIT]
     cp a, 1
     jr nz, .edit_interface_drawing_done
-    copy [WRAM_PLAYER_NAME_EDIT_INDEX], 8
+    copy [WRAM_EDIT_NAME_CHAR_INDEX], 8
     copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 0
     call DrawEditInterace
 .edit_interface_drawing_done
@@ -851,7 +854,7 @@ EditNamesMode:
     ; Check key input
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_A
     jr nz, .letter_selected_done
-    copy a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    copy a, [WRAM_EDIT_NAME_CHAR_INDEX]
     ; If we're past the end of the name, do nothing
     cp a, 8
     jr z, .letter_selected_done
@@ -890,9 +893,9 @@ EditNamesMode:
     ld e, l
     ; First edit the display name
     ld hl, EDIT_PLAYER_NAME_DISPLAY
-    ld a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    ld a, [WRAM_EDIT_NAME_CHAR_INDEX]
     inc a
-    ld [WRAM_PLAYER_NAME_EDIT_INDEX], a
+    ld [WRAM_EDIT_NAME_CHAR_INDEX], a
     dec a
     ld c, a
     add hl, bc
@@ -903,7 +906,7 @@ EditNamesMode:
     add hl, bc
     ; Load which player we're currently pointing to
     ; ld b, b
-    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
     ; Multiply by 8 to account for name length
     sla a
     sla a
@@ -915,12 +918,12 @@ EditNamesMode:
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_B
     jr nz, .letter_delete_done
-    copy a, [WRAM_PLAYER_NAME_EDIT_INDEX]
+    copy a, [WRAM_EDIT_NAME_CHAR_INDEX]
     ; If we're at the start of the name, do nothing
     cp a, 0
     jr z, .letter_delete_done
     dec a
-    ld [WRAM_PLAYER_NAME_EDIT_INDEX], a
+    ld [WRAM_EDIT_NAME_CHAR_INDEX], a
     ; Delete the last letter in the display name
     ld hl, EDIT_PLAYER_NAME_DISPLAY
     ld b, 0
@@ -933,7 +936,7 @@ EditNamesMode:
     add hl, bc
     ; Load which player we're currently pointing to
     ; ld b, b
-    ld a, [WRAM_PLAYER_ARROW_INDEX]
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
     ; Multiply by 8 to account for name length
     sla a
     sla a
@@ -986,6 +989,15 @@ EditNamesMode:
 .wrap_max_x_done
     ld [WRAM_KEY_HIGHLIGHT_X], a
 .increment_key_highlight_x_done
+
+    TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_SELECT
+    jr nz, .increment_edit_name_done
+    ld a, [WRAM_EDIT_NAME_PLAYER_INDEX]
+    inc a
+    and a, %00000011
+    ld [WRAM_EDIT_NAME_PLAYER_INDEX], a
+    copy [WRAM_EDIT_INTERFACE_NEEDS_INIT], 1
+.increment_edit_name_done
 
     TestPadInput_PressedAll WRAM_PAD_INPUT, PADF_START
     jr nz, .exit_edit_mode_done
