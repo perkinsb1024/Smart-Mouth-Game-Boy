@@ -21,7 +21,7 @@ To edit the names, use the **Select** button to select which name you would like
 You will to have [RGBDS](https://rgbds.gbdev.io/install) installed to build from source. After RGBDS is installed, simply run `./build.sh` to build the code. You will likely need to make it executable before the first time by running `chmod +x build.sh`
 
 ## Running the Game
-`smartMouth.gb` is included in the repo, so you don't need to build the code to run it. It has been developed and tested on [BGB](https://bgb.bircd.org/), and also verified on a flash cart in real hardware (tested on DMG and GBC).
+`smartMouth.gbc` is included in the repo, so you don't need to build the code to run it. It has been developed and tested on [BGB](https://bgb.bircd.org/), and also verified on a flash cart in real hardware (tested on DMG and GBC). While it is a `.gbc` file, it is still compatible with non-color emulators and hardware.
 
 
 

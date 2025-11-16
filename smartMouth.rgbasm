@@ -15,6 +15,8 @@ def TILE_ALPHABET_START             equ (GRAPHICS_DATA_ADDRESS_START - TILE_ALPH
 def ALPHABET_MAP_SIZE               equ (128)
 def ALPHABET_MAP_START              equ (TILE_ALPHABET_START - ALPHABET_MAP_SIZE)
 
+def GREEN_TILE_START_ADDRESS        equ (_SCRN0 + 1 * SCRN_VX_B + 12)
+def TILE_ROW_STEP                   equ (SCRN_VX_B - 5)
 def INITIAL_PLAYER_ARROW_ADDRESS    equ (_SCRN0 + 10 * SCRN_VX_B + 2)
 def ARROW_ADDRESS_STEP              equ (SCRN_VX_B * 2)
 def SCORE_ADDRESS_STEP              equ (ARROW_ADDRESS_STEP)
@@ -114,6 +116,59 @@ macro ClearTileMap0
     ld a, h
     cp a, high(_SCRN1)
     jr nz, .erase_tile\@
+endm
+
+macro InitCGBPalettes
+    copy [rBCPS], BCPSF_AUTOINC
+    ; BG Palette 1
+    copy [rBCPD], $FF
+    copy [rBCPD], $7F
+    copy [rBCPD], $9F
+    copy [rBCPD], $22
+    copy [rBCPD], $B3
+    copy [rBCPD], $1D
+    copy [rBCPD], $00
+    copy [rBCPD], $00
+    ; BG Palette 2
+    copy [rBCPD], $FF
+    copy [rBCPD], $7F
+    copy [rBCPD], $B0
+    copy [rBCPD], $13
+    copy [rBCPD], $EA
+    copy [rBCPD], $15
+    copy [rBCPD], $00
+    copy [rBCPD], $00
+
+    copy [rOCPS], OCPSF_AUTOINC
+    ; Object Palette 1
+    copy [rOCPD], $FF
+    copy [rOCPD], $7F
+    copy [rOCPD], $03
+    copy [rOCPD], $66
+    copy [rOCPD], $00
+    copy [rOCPD], $00
+    copy [rOCPD], $00
+    copy [rOCPD], $00
+endm
+
+macro SetTilePalettes
+    copy [rVBK], 1
+    ld c, 7
+    ld hl, GREEN_TILE_START_ADDRESS
+    ld d, 0
+.loop\@
+    copy [hli], 1
+    copy [hli], 1
+    copy [hli], 1
+    copy [hli], 1
+    copy [hli], 1
+    dec c
+    jr z, .done\@
+    ld e, TILE_ROW_STEP
+    add hl, de
+    jr .loop\@
+.done\@
+    copy [rVBK], 0
 endm
 
 macro DrawKeyboard
@@ -447,6 +502,8 @@ InitSample:
     ld [rOBP0], a
     ld a, %00011110
     ld [rOBP1], a
+    InitCGBPalettes
+    SetTilePalettes
 
     ; Set screen scroll
     xor a
@@ -547,7 +604,7 @@ DrawGameTileLetters:
     inc a
     ld [WRAM_TILE_INDEX], a
     ; Set palette
-    copy [hli], OAMF_PAL1
+    copy [hli], OAMF_PAL0
     dec c
     jr nz, .DrawTile0Chr
     ; Increment Y position
@@ -581,7 +638,7 @@ DrawGameTileLetters:
     inc a
     ld [WRAM_TILE_INDEX], a
     ; Set palette
-    copy [hli], OAMF_PAL1
+    copy [hli], OAMF_PAL0
     dec c
     jr nz, .DrawTile1Chr
     ; Increment Y position
