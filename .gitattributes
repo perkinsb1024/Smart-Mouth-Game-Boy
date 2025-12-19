@@ -1,0 +1,4 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+*.rgbasm linguist-language=Assembly
+*.rgbinc linguist-language=Assembly
